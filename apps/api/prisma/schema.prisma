@@ -1,0 +1,54 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ListingType {
+  MAIL
+  TRANSFER
+}
+
+model User {
+  id        BigInt    @id // Telegram user id
+  username  String?   @db.VarChar(32)
+  firstName String    @map("first_name") @db.VarChar(64)
+  lastName  String?   @map("last_name") @db.VarChar(64)
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  listings  Listing[]
+
+  @@map("users")
+}
+
+model Listing {
+  id       String      @id @default(uuid()) @db.Uuid
+  type     ListingType
+  authorId BigInt      @map("author_id")
+  author   User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  fromCity     String @map("from_city") @db.VarChar(64)
+  toCity       String @map("to_city") @db.VarChar(64)
+  fromCityNorm String @map("from_city_norm") @db.VarChar(64)
+  toCityNorm   String @map("to_city_norm") @db.VarChar(64)
+
+  // MAIL
+  departureDate DateTime? @map("departure_date") @db.Date
+
+  // TRANSFER
+  amount     Decimal? @db.Decimal(12, 2)
+  currency   String   @default("USD") @db.Char(3)
+  conditions String?  @db.VarChar(200)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([type, createdAt(sort: Desc)])
+  @@index([type, departureDate])
+  @@index([authorId, createdAt(sort: Desc)])
+  @@map("listings")
+}
