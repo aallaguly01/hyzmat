@@ -1,0 +1,48 @@
+{
+  "name": "@hyzmat/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -p tsconfig.json && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run --coverage",
+    "test:watch": "vitest",
+    "size": "size-limit",
+    "e2e": "playwright test"
+  },
+  "dependencies": {
+    "@hyzmat/shared": "workspace:*",
+    "@tanstack/react-query": "^5.62.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.28.0",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.0",
+    "@size-limit/file": "^11.1.6",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.1.0",
+    "@testing-library/user-event": "^14.5.2",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^5.0.0",
+    "@vitest/coverage-v8": "^3.0.0",
+    "jsdom": "^25.0.1",
+    "msw": "^2.7.0",
+    "size-limit": "^11.1.6",
+    "vite": "^7.0.0",
+    "vitest": "^3.0.0"
+  },
+  "size-limit": [
+    {
+      "name": "initial JS",
+      "path": "dist/assets/index-*.js",
+      "limit": "150 KB",
+      "gzip": true
+    }
+  ]
+}

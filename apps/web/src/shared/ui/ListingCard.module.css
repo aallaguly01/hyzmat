@@ -1,0 +1,86 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px;
+  border-radius: var(--radius);
+  background: var(--c-section-bg);
+}
+
+.card[data-expired='true'] {
+  opacity: 0.6;
+}
+
+.badges {
+  display: flex;
+  gap: 6px;
+}
+
+.badge {
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: var(--c-secondary-bg);
+  color: var(--c-accent-soft);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.expired {
+  color: var(--c-destructive);
+}
+
+.route {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.arrow {
+  color: var(--c-hint);
+}
+
+.meta {
+  color: var(--c-subtitle);
+}
+
+.amount {
+  color: var(--c-text);
+  font-weight: 600;
+}
+
+.hint {
+  margin: 0;
+  color: var(--c-hint);
+  font-size: 13px;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.author {
+  overflow: hidden;
+  color: var(--c-hint);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.own {
+  color: var(--c-accent-soft);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}

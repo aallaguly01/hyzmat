@@ -1,0 +1,28 @@
+.tabs {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 10;
+  display: flex;
+  height: calc(var(--tabs-height) + var(--safe-bottom));
+  padding-bottom: var(--safe-bottom);
+  border-top: 1px solid var(--c-section-separator);
+  background: var(--c-bg);
+}
+
+.tab {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  color: var(--c-hint);
+  font-size: 11px;
+  text-decoration: none;
+}
+
+.active {
+  color: var(--c-accent);
+}

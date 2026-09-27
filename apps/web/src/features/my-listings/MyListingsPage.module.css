@@ -1,0 +1,10 @@
+.fab {
+  position: fixed;
+  right: 16px;
+  bottom: calc(var(--tabs-height) + var(--safe-bottom) + 16px);
+  z-index: 11;
+  min-height: var(--fab-height);
+  padding: 0 20px;
+  border-radius: calc(var(--fab-height) / 2);
+  box-shadow: 0 4px 16px rgb(0 0 0 / 20%);
+}

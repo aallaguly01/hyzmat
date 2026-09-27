@@ -1,0 +1,80 @@
+/* Базовые примитивы */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--c-accent);
+  color: var(--c-accent-text);
+  font-weight: 600;
+  transition: opacity 0.1s;
+}
+
+.button:active {
+  opacity: 0.7;
+}
+
+.button:disabled,
+.button[aria-disabled='true'] {
+  opacity: 0.5;
+}
+
+.secondary {
+  background: var(--c-secondary-bg);
+  color: var(--c-accent-soft);
+}
+
+.danger {
+  background: var(--c-secondary-bg);
+  color: var(--c-destructive);
+}
+
+.page {
+  padding: var(--gap);
+  padding-bottom: calc(var(--tabs-height) + var(--fab-height) + var(--safe-bottom) + 32px);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+}
+
+.center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--gap);
+  padding: 48px 24px;
+  color: var(--c-hint);
+  text-align: center;
+}
+
+.title {
+  margin: 0 0 var(--gap);
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.skeleton {
+  height: 112px;
+  border-radius: var(--radius);
+  background: var(--c-section-bg);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.spinner {
+  padding: 16px;
+  color: var(--c-hint);
+  text-align: center;
+}

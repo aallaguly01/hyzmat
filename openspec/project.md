@@ -15,7 +15,7 @@ MVP Telegram Mini App, в котором пользователи публику
 | Слой | Технологии |
 |---|---|
 | Монорепо | pnpm workspaces, Node.js 22 LTS, TypeScript 5 (`strict: true`) |
-| Frontend (`apps/web`) | React 18, Vite, официальный `telegram-web-app.js` + тонкие собственные хуки (`useMainButton`, `useBackButton`, …), TanStack Query v5, React Router v6, React Hook Form + `@hookform/resolvers/zod`, CSS Modules (без UI-китов, только CSS-переменные Telegram) |
+| Frontend (`apps/web`) | React 18, Vite, официальный `telegram-web-app.js` + тонкие собственные хуки (`useMainButton`, `useBackButton`, …), TanStack Query v5, React Router v6, собственный хук формы `useZodForm` поверх zod-схем из `shared`, CSS Modules (без UI-китов, только CSS-переменные Telegram) |
 | Backend (`apps/api`) | Fastify 5, `fastify-type-provider-zod`, `@fastify/rate-limit`, `@fastify/cors`, Prisma ORM, pino-логгер |
 | БД | PostgreSQL 16 |
 | Общий код (`packages/shared`) | zod-схемы (единый контракт API), TS-типы, чистые функции (`buildContactLink`, `normalizeCity`, `isExpired`, `formatAmount`) |
