@@ -1,0 +1,20 @@
+pre-commit:
+  parallel: true
+  commands:
+    eslint:
+      glob: '*.{ts,tsx,js}'
+      run: pnpm exec eslint --max-warnings=0 {staged_files}
+    prettier:
+      glob: '*.{ts,tsx,js,json,css,md,yml,yaml}'
+      exclude: 'openspec/.*'
+      run: pnpm exec prettier --check {staged_files}
+    stylelint:
+      glob: '*.css'
+      run: pnpm exec stylelint {staged_files}
+    typecheck:
+      run: pnpm typecheck
+
+commit-msg:
+  commands:
+    commitlint:
+      run: pnpm exec commitlint --edit {1}

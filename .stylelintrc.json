@@ -1,0 +1,15 @@
+{
+  "extends": ["stylelint-config-standard"],
+  "rules": {
+    "color-no-hex": true,
+    "selector-class-pattern": null,
+    "custom-property-pattern": null,
+    "declaration-empty-line-before": null
+  },
+  "overrides": [
+    {
+      "files": ["**/tokens.css"],
+      "rules": { "color-no-hex": null }
+    }
+  ]
+}
