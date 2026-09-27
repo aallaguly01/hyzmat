@@ -1,0 +1,33 @@
+# syntax=docker/dockerfile:1.7
+FROM node:22-alpine AS base
+RUN apk add --no-cache openssl && corepack enable
+WORKDIR /repo
+
+FROM base AS build
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+COPY apps/api/package.json apps/api/
+COPY packages/shared/package.json packages/shared/
+COPY apps/api/prisma apps/api/prisma
+RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
+    pnpm install --frozen-lockfile --filter @hyzmat/api...
+COPY tsconfig.base.json ./
+COPY packages/shared packages/shared
+COPY apps/api apps/api
+RUN pnpm --filter @hyzmat/api build \
+ && pnpm --filter @hyzmat/api deploy --legacy --prod /out \
+ && cd /out && npx prisma generate
+
+FROM node:22-alpine AS runtime
+RUN apk add --no-cache openssl tini
+ENV NODE_ENV=production PORT=3000
+WORKDIR /app
+COPY --from=build --chown=node:node /out/node_modules ./node_modules
+COPY --from=build --chown=node:node /out/package.json ./
+COPY --from=build --chown=node:node /out/prisma ./prisma
+COPY --from=build --chown=node:node /repo/apps/api/dist ./dist
+USER node
+EXPOSE 3000
+HEALTHCHECK --interval=10s --timeout=3s --retries=5 \
+  CMD wget -qO- http://127.0.0.1:3000/api/health || exit 1
+ENTRYPOINT ["/sbin/tini", "--"]
+CMD ["sh", "-c", "node node_modules/prisma/build/index.js migrate deploy && node dist/server.js"]

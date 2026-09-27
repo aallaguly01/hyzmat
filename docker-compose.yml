@@ -1,0 +1,65 @@
+# Продакшен-стенд на VPS. Переменные — в .env рядом (см. .env.example).
+name: hyzmat
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: hyzmat
+      POSTGRES_USER: hyzmat
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?задайте POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U hyzmat -d hyzmat']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    image: ${API_IMAGE:-ghcr.io/owner/hyzmat-api}:${IMAGE_TAG:-latest}
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.api
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://hyzmat:${POSTGRES_PASSWORD}@postgres:5432/hyzmat
+      BOT_TOKEN: ${BOT_TOKEN:?задайте BOT_TOKEN}
+      INIT_DATA_TTL: ${INIT_DATA_TTL:-86400}
+      CORS_ORIGIN: https://${DOMAIN}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  web:
+    image: ${WEB_IMAGE:-ghcr.io/owner/hyzmat-web}:${IMAGE_TAG:-latest}
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.web
+      args:
+        VITE_BOT_USERNAME: ${BOT_USERNAME:-}
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+
+  # TLS-терминация: Telegram открывает Mini App только по HTTPS
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '443:443'
+    environment:
+      DOMAIN: ${DOMAIN:?задайте DOMAIN}
+    volumes:
+      - ./docker/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+    depends_on:
+      - web
+
+volumes:
+  pgdata:
+  caddy_data:
