@@ -169,5 +169,5 @@ apps/api/src/
 | `DATABASE_URL` | `postgresql://app:app@postgres:5432/hyzmat` | |
 | `BOT_TOKEN` | `123:ABC` | токен бота для проверки initData |
 | `INIT_DATA_TTL` | `86400` | секунд |
-| `CORS_ORIGIN` | `https://hyzmat.example.com` | |
+| `CORS_ORIGIN` | `https://aljak.me` | |
 | `PORT` | `3000` | |
