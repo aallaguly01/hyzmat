@@ -23,7 +23,7 @@ test('создать → увидеть в ленте → отредактиро
   await page.getByRole('button', { name: 'Создать заявку' }).click();
   await page.getByRole('button', { name: /Почта/ }).click();
   await expect(mainButton(page)).toBeDisabled();
-  await page.getByLabel('Откуда').fill(city);
+  await page.getByLabel('Откуда', { exact: true }).fill(city);
   await page.getByLabel('Куда', { exact: true }).fill('Москва');
   await page.getByLabel('Дата вылета').fill(inDays(10));
   await expect(page.getByText(/Ваш Telegram для связи:/)).toBeVisible();
@@ -67,8 +67,8 @@ test('перевод: сумма в долларах отображается в
   const city = `Перевод${Date.now()}`;
   await page.goto(`/listings/new?uid=${uid()}`);
   await page.getByRole('button', { name: /Перевод/ }).click();
-  await page.getByLabel('Город, где отдаю деньги').fill(city);
-  await page.getByLabel('Город, где получат деньги').fill('Стамбул');
+  await page.getByLabel('Город, где отдаю деньги', { exact: true }).fill(city);
+  await page.getByLabel('Город, где получат деньги', { exact: true }).fill('Стамбул');
   await page.getByLabel('Сумма, $').fill('1500');
   await page.getByLabel('Условия/Комиссия').fill('2%');
   await mainButton(page).click();
