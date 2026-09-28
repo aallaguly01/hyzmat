@@ -10,8 +10,8 @@
 
 ## 3. Ссылки на заявку
 - [x] 3.1 `start_param` в типах и моках, `useStartParam`
-- [x] 3.2 `ListingViewPage` (`/listings/:id`), `ShareButton` в ленте и на странице заявки
-- [x] 3.3 Тесты `ListingViewPage.test.tsx`
+- [x] 3.2 Подсветка заявки в ленте (`FeedFilter.highlight`), `ShareButton` в ленте
+- [x] 3.3 Тесты `startParam.test.tsx`
 
 ## 4. Подписки
 - [ ] 4.1 Миграция `subscriptions`, `users.bot_blocked_at`

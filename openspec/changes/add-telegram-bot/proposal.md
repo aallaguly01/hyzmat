@@ -18,11 +18,11 @@ VPS стоит в РФ: он и Telegram недоступны друг друг�
   до 5 заявок ленты со ссылками `t.me/<бот>?startapp=l-<id>` и кнопкой «Все заявки».
 - `packages/shared`: `resolveCityAlias` (латиница популярных городов), формат `startapp`
   (`l-<uuid>`, `f-<TYPE>[-<base64url города>]`).
-- Web: разбор `start_param`, страница заявки `/listings/:id`, кнопка «Поделиться».
+- Web: разбор `start_param` (ссылка на заявку подсвечивает её в ленте), кнопка «Поделиться».
 - Подписки и уведомления через outbox, который Worker забирает по cron.
 
 ## Impact
 - Affected specs: `telegram-bot` (новая), `feed-ui`
 - Affected code: `apps/bot-worker`, `apps/api` (`modules/bot`, config), `packages/shared`
-  (`city`, `deeplink`), `apps/web` (`useStartParam`, `ListingViewPage`, `ShareButton`)
+  (`city`, `deeplink`), `apps/web` (`useStartParam`, `FeedPage`, `ShareButton`)
 - Деплой: сначала сервер (`BOT_API_KEY`, `BOT_USERNAME` в `.env`), потом `wrangler deploy`

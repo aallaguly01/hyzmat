@@ -6,6 +6,9 @@ interface FeedFilter {
   setType: (t: ListingType) => void;
   city: string;
   setCity: (c: string) => void;
+  /** Заявка из ссылки startapp=l-<id>: лента прокручивает к ней и подсвечивает. */
+  highlight: string | null;
+  setHighlight: (id: string | null) => void;
 }
 
 const Ctx = createContext<FeedFilter | null>(null);
@@ -14,7 +17,11 @@ const Ctx = createContext<FeedFilter | null>(null);
 export function FeedFilterProvider({ children }: { children: ReactNode }) {
   const [type, setType] = useState<ListingType>('MAIL');
   const [city, setCity] = useState('');
-  const value = useMemo(() => ({ type, setType, city, setCity }), [type, city]);
+  const [highlight, setHighlight] = useState<string | null>(null);
+  const value = useMemo(
+    () => ({ type, setType, city, setCity, highlight, setHighlight }),
+    [type, city, highlight],
+  );
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
 

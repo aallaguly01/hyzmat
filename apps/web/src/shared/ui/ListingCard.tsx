@@ -17,12 +17,20 @@ interface Props {
   showType?: boolean;
   footer: ReactNode;
   cardRef?: Ref<HTMLElement>;
+  /** Подсветка карточки, открытой по ссылке. */
+  highlighted?: boolean;
 }
 
-export function ListingCard({ listing, showType, footer, cardRef }: Props) {
+export function ListingCard({ listing, showType, footer, cardRef, highlighted }: Props) {
   const expired = 'isExpired' in listing && listing.isExpired;
   return (
-    <article ref={cardRef} className={s.card} data-expired={expired ? 'true' : undefined}>
+    <article
+      ref={cardRef}
+      className={s.card}
+      data-listing-id={listing.id}
+      data-expired={expired ? 'true' : undefined}
+      data-highlighted={highlighted ? 'true' : undefined}
+    >
       {(showType || expired) && (
         <div className={s.badges}>
           {showType && <span className={s.badge}>{TYPE_LABEL[listing.type]}</span>}

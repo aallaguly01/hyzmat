@@ -20,12 +20,17 @@ const TYPE_OPTIONS: { value: ListingType; label: string }[] = [
   { value: 'TRANSFER', label: 'Перевод' },
 ];
 
-function FeedCard({ listing }: { listing: ListingDto }) {
+/** Сколько страниц ленты догружать в поисках заявки из ссылки. */
+const HIGHLIGHT_MAX_PAGES = 5;
+const HIGHLIGHT_MS = 3000;
+
+function FeedCard({ listing, highlighted }: { listing: ListingDto; highlighted: boolean }) {
   const ref = useViewTracking<HTMLElement>(listing.id, !listing.isOwn);
   return (
     <ListingCard
       cardRef={ref}
       listing={listing}
+      highlighted={highlighted}
       footer={
         <>
           <span className={card.author}>{listing.contact.label}</span>
@@ -67,7 +72,7 @@ function LoadMore({ onVisible }: { onVisible: () => void }) {
 
 export function FeedPage() {
   const navigate = useNavigate();
-  const { type, setType, city, setCity } = useFeedFilter();
+  const { type, setType, city, setCity, highlight, setHighlight } = useFeedFilter();
   const trimmed = city.trim();
   const debounced = useDebouncedValue(trimmed, 300);
   // очистка поиска применяется сразу, ввод — с задержкой
@@ -75,6 +80,32 @@ export function FeedPage() {
   const feed = useFeed(type, debouncedCity);
 
   const items = feed.data?.pages.flatMap((p) => p.items) ?? [];
+  const found = !!highlight && items.some((l) => l.id === highlight);
+  const pagesLoaded = feed.data?.pages.length ?? 0;
+  const { isPending, isFetchingNextPage, hasNextPage, fetchNextPage } = feed;
+
+  // заявка из ссылки: прокрутить и подсветить; если не нашлась — догрузить, потом сдаться
+  useEffect(() => {
+    if (!highlight || isPending || isFetchingNextPage) return;
+    if (found) {
+      document
+        .querySelector(`[data-listing-id="${highlight}"]`)
+        ?.scrollIntoView?.({ block: 'center', behavior: 'smooth' });
+      const t = setTimeout(() => setHighlight(null), HIGHLIGHT_MS);
+      return () => clearTimeout(t);
+    }
+    if (hasNextPage && pagesLoaded < HIGHLIGHT_MAX_PAGES) void fetchNextPage();
+    else setHighlight(null);
+  }, [
+    highlight,
+    found,
+    pagesLoaded,
+    isPending,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+    setHighlight,
+  ]);
 
   let content;
   if (feed.isPending) {
@@ -98,7 +129,7 @@ export function FeedPage() {
     content = (
       <div className={ui.list}>
         {items.map((l) => (
-          <FeedCard key={l.id} listing={l} />
+          <FeedCard key={l.id} listing={l} highlighted={l.id === highlight} />
         ))}
         {feed.hasNextPage && (
           <LoadMore

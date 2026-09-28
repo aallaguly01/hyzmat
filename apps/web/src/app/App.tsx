@@ -19,11 +19,6 @@ const CreateListingPage = lazy(() =>
 const EditListingPage = lazy(() =>
   import('../features/listing-form/ListingFormPage').then((m) => ({ default: m.EditListingPage })),
 );
-const ListingViewPage = lazy(() =>
-  import('../features/listing-view/ListingViewPage').then((m) => ({
-    default: m.ListingViewPage,
-  })),
-);
 
 function OpenInTelegram() {
   const bot = import.meta.env.VITE_BOT_USERNAME as string | undefined;
@@ -81,7 +76,6 @@ export function AppRoutes() {
           <Route path="/my" element={<MyListingsPage />} />
         </Route>
         <Route path="/listings/new" element={<CreateListingPage />} />
-        <Route path="/listings/:id" element={<ListingViewPage />} />
         <Route path="/listings/:id/edit" element={<EditListingPage />} />
         <Route path="*" element={<Navigate to="/feed" replace />} />
       </Routes>

@@ -5,6 +5,11 @@
   padding: 14px;
   border-radius: var(--radius);
   background: var(--c-section-bg);
+  transition: box-shadow 0.4s;
+}
+
+.card[data-highlighted='true'] {
+  box-shadow: 0 0 0 2px var(--c-accent);
 }
 
 .card[data-expired='true'] {
