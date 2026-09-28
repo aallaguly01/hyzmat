@@ -4,5 +4,6 @@ compatibility_date = "2026-09-01"
 
 [vars]
 WEBAPP_URL = "https://aljak.me"
+SERVER_URL = "https://aljak.me"
 
-# WEBHOOK_SECRET задаётся секретом: npx wrangler secret put WEBHOOK_SECRET
+# секреты: npx wrangler@4 secret put WEBHOOK_SECRET | SERVER_API_KEY

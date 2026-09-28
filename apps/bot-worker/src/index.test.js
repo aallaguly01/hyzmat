@@ -1,8 +1,13 @@
 import assert from 'node:assert/strict';
-import { describe, it } from 'node:test';
+import { afterEach, describe, it, mock } from 'node:test';
 import worker, { WELCOME_TEXT } from './index.js';
 
-const env = { WEBAPP_URL: 'https://example.com', WEBHOOK_SECRET: 'test-secret' };
+const env = {
+  WEBAPP_URL: 'https://example.com',
+  SERVER_URL: 'https://api.test',
+  WEBHOOK_SECRET: 'test-secret',
+  SERVER_API_KEY: 'server-key',
+};
 
 const post = (body, secret = env.WEBHOOK_SECRET) =>
   worker.fetch(
@@ -60,5 +65,33 @@ describe('bot worker', () => {
   it('GET → 404', async () => {
     const res = await worker.fetch(new Request('https://bot.test/'), env);
     assert.equal(res.status, 404);
+  });
+});
+
+describe('diag', () => {
+  afterEach(() => mock.restoreAll());
+
+  const diag = (key = env.WEBHOOK_SECRET) =>
+    worker.fetch(new Request('https://bot.test/diag', { headers: { 'x-diag-key': key } }), env);
+
+  it('без ключа → 401', async () => {
+    assert.equal((await diag('nope')).status, 401);
+  });
+
+  it('проверяет сервер с X-Bot-Key', async () => {
+    const f = mock.method(globalThis, 'fetch', async () => new Response('{"ok":true}'));
+    const res = await diag();
+    assert.equal(res.status, 200);
+    assert.equal((await res.json()).server, 200);
+    const [url, init] = f.mock.calls[0].arguments;
+    assert.equal(url, 'https://api.test/api/bot/ping');
+    assert.equal(init.headers['x-bot-key'], 'server-key');
+  });
+
+  it('сервер недоступен → 502 с ошибкой', async () => {
+    mock.method(globalThis, 'fetch', async () => Promise.reject(new Error('timeout')));
+    const res = await diag();
+    assert.equal(res.status, 502);
+    assert.match((await res.json()).error, /timeout/);
   });
 });

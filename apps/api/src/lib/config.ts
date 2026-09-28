@@ -5,6 +5,11 @@ const EnvSchema = z.object({
   BOT_TOKEN: z.string().regex(/^\d+:[\w-]+$/, 'BOT_TOKEN должен иметь вид 123456:ABC...'),
   INIT_DATA_TTL: z.coerce.number().int().positive().default(86_400),
   CORS_ORIGIN: z.string().optional(),
+  // Ключ для Cloudflare Worker бота; пустая строка = выключено
+  BOT_API_KEY: z.preprocess(
+    (v) => (v === '' ? undefined : v),
+    z.string().min(32, 'BOT_API_KEY: не короче 32 символов').optional(),
+  ),
   PORT: z.coerce.number().int().default(3000),
   HOST: z.string().default('0.0.0.0'),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),

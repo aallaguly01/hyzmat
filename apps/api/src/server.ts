@@ -13,6 +13,7 @@ const app = buildApp({
   initDataTtlSeconds: config.INIT_DATA_TTL,
   corsOrigin: config.CORS_ORIGIN?.split(',').map((s) => s.trim()),
   logger: { level: config.LOG_LEVEL },
+  bot: config.BOT_API_KEY ? { apiKey: config.BOT_API_KEY } : undefined,
 });
 
 const shutdown = async (signal: string) => {
