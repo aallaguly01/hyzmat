@@ -35,6 +35,7 @@
 
 .page {
   padding: var(--gap);
+  padding-top: calc(var(--gap) + var(--safe-top));
   padding-bottom: calc(var(--tabs-height) + var(--fab-height) + var(--safe-bottom) + 32px);
 }
 

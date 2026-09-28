@@ -5,8 +5,11 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  margin: calc(var(--gap) * -1) calc(var(--gap) * -1) var(--gap);
+
+  /* фон фильтров заходит под кнопки Telegram, иначе в fullscreen лента просвечивает над ними */
+  margin: calc((var(--gap) + var(--safe-top)) * -1) calc(var(--gap) * -1) var(--gap);
   padding: var(--gap);
+  padding-top: calc(var(--gap) + var(--safe-top));
   background: var(--c-secondary-bg);
 }
 

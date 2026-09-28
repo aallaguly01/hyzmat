@@ -17,6 +17,12 @@
   --gap: 12px;
   --tabs-height: 56px;
   --fab-height: 48px;
-  --safe-bottom: env(safe-area-inset-bottom, 0px);
+
+  /* В fullscreen (Bot API 8.0+) Telegram рисует свои кнопки поверх контента и отдаёт отступы в --tg-*-safe-area-inset-* */
+  --safe-top: calc(var(--tg-safe-area-inset-top, 0px) + var(--tg-content-safe-area-inset-top, 0px));
+  --safe-bottom: max(
+    env(safe-area-inset-bottom, 0px),
+    calc(var(--tg-safe-area-inset-bottom, 0px) + var(--tg-content-safe-area-inset-bottom, 0px))
+  );
   --font: -apple-system, system-ui, 'Segoe UI', roboto, sans-serif;
 }
