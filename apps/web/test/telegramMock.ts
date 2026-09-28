@@ -34,6 +34,7 @@ export function createTelegramMock(
   const user = opts.user ?? { id: 1001, first_name: 'Алиса', username: 'alice' };
   const themeHandlers = new Set<() => void>();
   const confirmAnswers: boolean[] = [];
+  let writeAccess = true;
 
   const MainButton = createButton();
   const BackButton = createButton();
@@ -66,7 +67,11 @@ export function createTelegramMock(
     ),
     onEvent: vi.fn((_e: string, cb: () => void) => themeHandlers.add(cb)),
     offEvent: vi.fn((_e: string, cb: () => void) => themeHandlers.delete(cb)),
+    requestWriteAccess: vi.fn((cb?: (granted: boolean) => void) => cb?.(writeAccess)),
     // helpers
+    denyWriteAccess: () => {
+      writeAccess = false;
+    },
     emitThemeChanged: () => themeHandlers.forEach((h) => h()),
     answerConfirm: (ok: boolean) => confirmAnswers.push(ok),
   };

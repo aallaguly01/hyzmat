@@ -14,16 +14,15 @@
 - [x] 3.3 Тесты `startParam.test.tsx`
 
 ## 4. Подписки
-- [ ] 4.1 Миграция `subscriptions`, `users.bot_blocked_at`
-- [ ] 4.2 API `GET/POST/DELETE /api/subscriptions`, лимит 10
-- [ ] 4.3 Web: «Следить» в ленте (`requestWriteAccess`), блок «Подписки» в «Моих заявках»
+- [x] 4.1 Миграция `0004_bot_notifications`: `subscriptions`, `notifications`, `users.bot_blocked_at`, `listings.expiry_notified_at`
+- [x] 4.2 API `GET/POST/DELETE /api/subscriptions`, лимит 10
+- [x] 4.3 Web: «Следить» в ленте (`requestWriteAccess`), блок «Подписки» в «Моих заявках»
 
 ## 5. Уведомления
-- [ ] 5.1 Миграция `notifications`, `listings.expiry_notified_at`
-- [ ] 5.2 Постановка: новая заявка по подписке, напоминание за день до выезда
-- [ ] 5.3 `POST /api/bot/outbox/claim`, `/ack`
-- [ ] 5.4 Worker `scheduled()`: claim → sendMessage → ack
+- [x] 5.1 Постановка: новая заявка по подписке, напоминание за день до выезда
+- [x] 5.2 `POST /api/bot/outbox/claim`, `/ack`
+- [x] 5.3 Worker `scheduled()`: claim → sendMessage → ack
 
 ## 6. Проверка
-- [ ] 6.1 `pnpm test`, `pnpm lint`, `pnpm format:check`, `pnpm typecheck`
-- [ ] 6.2 `openspec validate add-telegram-bot --strict`
+- [x] 6.1 `pnpm test`, `pnpm lint`, `pnpm format:check`, `pnpm typecheck`
+- [x] 6.2 `openspec validate add-telegram-bot --strict`

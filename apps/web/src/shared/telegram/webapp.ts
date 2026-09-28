@@ -28,6 +28,13 @@ export function showAlert(message: string): Promise<void> {
   return new Promise((resolve) => webApp().showAlert(message, () => resolve()));
 }
 
+/** Разрешение боту писать пользователю; в старых клиентах без метода считаем, что есть. */
+export function requestWriteAccess(): Promise<boolean> {
+  const wa = webApp();
+  if (!wa.requestWriteAccess || !wa.isVersionAtLeast('6.9')) return Promise.resolve(true);
+  return new Promise((resolve) => wa.requestWriteAccess!((granted) => resolve(!!granted)));
+}
+
 export function showConfirm(message: string): Promise<boolean> {
   return new Promise((resolve) => webApp().showConfirm(message, (ok) => resolve(!!ok)));
 }

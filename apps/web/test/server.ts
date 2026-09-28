@@ -8,6 +8,7 @@ export const server = setupServer(
   http.get('/api/listings', () => HttpResponse.json({ items: [], nextCursor: null })),
   http.get('/api/me/listings', () => HttpResponse.json({ items: [] })),
   http.post('/api/listings/views', () => new HttpResponse(null, { status: 204 })),
+  http.get('/api/subscriptions', () => HttpResponse.json({ items: [] })),
 );
 
 server.events.on('request:start', async ({ request }) => {

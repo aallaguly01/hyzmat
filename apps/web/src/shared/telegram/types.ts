@@ -56,6 +56,8 @@ export interface TelegramWebApp {
   openTelegramLink(url: string): void;
   showAlert(message: string, cb?: () => void): void;
   showConfirm(message: string, cb?: (ok: boolean) => void): void;
+  /** Bot API 6.9+: разрешение боту писать пользователю (нужно для уведомлений). */
+  requestWriteAccess?(cb?: (granted: boolean) => void): void;
   onEvent(event: 'themeChanged', cb: () => void): void;
   offEvent(event: 'themeChanged', cb: () => void): void;
 }

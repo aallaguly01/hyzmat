@@ -112,6 +112,13 @@ describe('Ссылка на заявку (startapp=l-<id>)', () => {
   });
 });
 
+describe('Ссылка «Мои заявки» (startapp=my)', () => {
+  it('открывает вкладку «Мои заявки»', async () => {
+    openWith('my');
+    expect(await screen.findByRole('heading', { name: 'Мои заявки' })).toBeInTheDocument();
+  });
+});
+
 describe('Ссылка на ленту (startapp=f-<TYPE>-<город>)', () => {
   it('ставит тип и город фильтра', async () => {
     openWith(feedStartParam('TRANSFER', 'Балкан'));

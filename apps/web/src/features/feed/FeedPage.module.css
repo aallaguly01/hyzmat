@@ -16,3 +16,8 @@
 .sentinel {
   height: 1px;
 }
+
+.follow {
+  width: 100%;
+  margin-bottom: var(--gap);
+}

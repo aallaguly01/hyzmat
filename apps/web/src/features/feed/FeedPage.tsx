@@ -13,6 +13,7 @@ import { ShareButton } from '../../shared/ui/ShareButton';
 import { EmptyState, ErrorState, SkeletonList } from '../../shared/ui/States';
 import ui from '../../shared/ui/ui.module.css';
 import s from './FeedPage.module.css';
+import { FollowButton } from './FollowButton';
 import { useViewTracking } from './viewTracker';
 
 const TYPE_OPTIONS: { value: ListingType; label: string }[] = [
@@ -154,6 +155,7 @@ export function FeedPage() {
         />
         <SearchInput value={city} onChange={setCity} placeholder="Поиск по городу" />
       </div>
+      {debouncedCity && <FollowButton type={type} city={debouncedCity} />}
       {content}
     </main>
   );

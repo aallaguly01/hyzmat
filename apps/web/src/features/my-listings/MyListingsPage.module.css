@@ -8,3 +8,46 @@
   border-radius: calc(var(--fab-height) / 2);
   box-shadow: 0 4px 16px rgb(0 0 0 / 20%);
 }
+
+.subs {
+  margin-top: 24px;
+}
+
+.subsTitle {
+  margin: 0 0 8px;
+  color: var(--c-hint);
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.subsList {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border-radius: var(--radius);
+  background: var(--c-section-bg);
+  list-style: none;
+}
+
+.sub {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 4px 0 14px;
+}
+
+.sub + .sub {
+  border-top: 0.5px solid var(--c-section-separator);
+}
+
+.subRemove {
+  width: 40px;
+  height: 40px;
+  border: 0;
+  background: none;
+  color: var(--c-hint);
+  font-size: 16px;
+}

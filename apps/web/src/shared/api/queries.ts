@@ -5,7 +5,14 @@ import {
   useQueryClient,
   type QueryClient,
 } from '@tanstack/react-query';
-import type { ListingPageDto, ListingType, MyListingDto, MyListingsDto } from '@hyzmat/shared';
+import type {
+  ListingPageDto,
+  ListingType,
+  MyListingDto,
+  MyListingsDto,
+  SubscriptionDto,
+  SubscriptionsDto,
+} from '@hyzmat/shared';
 import { api, ApiError } from './client';
 
 export const keys = {
@@ -13,6 +20,7 @@ export const keys = {
   feedAll: ['feed'] as const,
   mine: ['my-listings'] as const,
   listing: (id: string) => ['listing', id] as const,
+  subscriptions: ['subscriptions'] as const,
 };
 
 export function useFeed(type: ListingType, city: string) {
@@ -108,5 +116,53 @@ export function useDeleteListing(opts: { onSuccess: () => void; onError: (e: Err
       opts.onSuccess();
     },
     onSettled: () => qc.invalidateQueries({ queryKey: keys.feedAll }),
+  });
+}
+
+export function useSubscriptions() {
+  return useQuery({
+    queryKey: keys.subscriptions,
+    queryFn: () => api<SubscriptionsDto>('/subscriptions'),
+  });
+}
+
+export function useSubscribe() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: { type: ListingType; city: string }) =>
+      api<SubscriptionDto>('/subscriptions', { method: 'POST', body }),
+    onSuccess: (sub) => {
+      qc.setQueryData<SubscriptionsDto>(keys.subscriptions, (old) =>
+        old && !old.items.some((s) => s.id === sub.id) ? { items: [...old.items, sub] } : old,
+      );
+      void qc.invalidateQueries({ queryKey: keys.subscriptions });
+    },
+  });
+}
+
+/** Оптимистично: подписка пропадает сразу, при ошибке возвращается. 404 = уже удалена. */
+export function useUnsubscribe(opts: { onError: (e: Error) => void }) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      try {
+        await api<void>(`/subscriptions/${id}`, { method: 'DELETE' });
+      } catch (e) {
+        if (e instanceof ApiError && e.status === 404) return;
+        throw e;
+      }
+    },
+    onMutate: async (id) => {
+      await qc.cancelQueries({ queryKey: keys.subscriptions });
+      const prev = qc.getQueryData<SubscriptionsDto>(keys.subscriptions);
+      qc.setQueryData<SubscriptionsDto>(keys.subscriptions, (old) =>
+        old ? { items: old.items.filter((s) => s.id !== id) } : old,
+      );
+      return { prev };
+    },
+    onError: (e, _id, ctx) => {
+      if (ctx?.prev) qc.setQueryData(keys.subscriptions, ctx.prev);
+      opts.onError(e);
+    },
   });
 }

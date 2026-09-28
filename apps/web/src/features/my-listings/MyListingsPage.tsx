@@ -8,6 +8,7 @@ import { ListingCard } from '../../shared/ui/ListingCard';
 import { EmptyState, ErrorState, SkeletonList } from '../../shared/ui/States';
 import ui from '../../shared/ui/ui.module.css';
 import s from './MyListingsPage.module.css';
+import { Subscriptions } from './Subscriptions';
 
 function MyCard({ listing, onDelete }: { listing: MyListingDto; onDelete: (id: string) => void }) {
   const navigate = useNavigate();
@@ -101,6 +102,7 @@ export function MyListingsPage() {
     <main className={ui.page}>
       <h1 className={ui.title}>Мои заявки</h1>
       {content}
+      <Subscriptions />
       {items.length > 0 && (
         <button
           type="button"

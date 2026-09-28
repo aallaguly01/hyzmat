@@ -56,6 +56,7 @@ cd apps/web && VITE_MOCK_TELEGRAM=true VITE_DEV_BOT_TOKEN=123456:DEV-TOKEN pnpm 
    ```
    Тексты бота — в `apps/api/src/modules/bot/bot.update.ts` (деплоятся вместе с API); Worker передеплаивать нужно только при правке `apps/bot-worker`.
    Оформление (описание, команды, кнопка меню): `BOT_TOKEN=... node setup.mjs` в `apps/bot-worker`.
+   Уведомления (новая заявка по подписке «🔔 Следить» в ленте, напоминание накануне выезда): сервер складывает их в очередь, Worker раз в минуту (cron) забирает и отправляет — нужен `npx wrangler@4 secret put BOT_TOKEN`.
    Связь Worker → сервер: `BOT_API_KEY` в `.env` сервера и `npx wrangler@4 secret put SERVER_API_KEY` с тем же значением; проверка — `curl https://hyzmat-bot.<account>.workers.dev/diag -H "x-diag-key: <WEBHOOK_SECRET>"`.
 4. В GitHub: secrets `VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY`; variable `BOT_USERNAME`; environment `production`.
 5. Push в `main` → CI (lint, typecheck, тесты, e2e) → Deploy (образы в GHCR, `docker compose up -d` по SSH). Миграции применяются при старте API, TLS выпускает Caddy.

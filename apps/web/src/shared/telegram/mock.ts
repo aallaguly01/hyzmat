@@ -123,6 +123,7 @@ export async function installMockTelegram(): Promise<void> {
     openTelegramLink: (url) => void window.open(url, '_blank'),
     showAlert: (m, cb) => (window.alert(m), cb?.()),
     showConfirm: (m, cb) => cb?.(window.confirm(m)),
+    requestWriteAccess: (cb) => cb?.(true),
     onEvent: noop,
     offEvent: noop,
   };

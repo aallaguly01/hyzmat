@@ -10,7 +10,7 @@ const consumed = new WeakSet<object>();
 
 /**
  * Ссылка t.me/<бот>?startapp=…: l-<id> → лента нужного типа с подсветкой заявки
- * (удалённая или истёкшая — просто лента), f-<TYPE>[-город] → лента с фильтром.
+ * (удалённая или истёкшая — просто лента), f-<TYPE>[-город] → лента с фильтром, my → «Мои заявки».
  */
 export function useStartParam() {
   const navigate = useNavigate();
@@ -22,6 +22,10 @@ export function useStartParam() {
     consumed.add(wa);
     const param = parseStartParam(wa.initDataUnsafe.start_param);
     if (!param) return;
+    if (param.kind === 'my') {
+      navigate('/my');
+      return;
+    }
     navigate('/feed');
     if (param.kind === 'feed') {
       setType(param.type);
