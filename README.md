@@ -46,7 +46,7 @@ cd apps/web && VITE_MOCK_TELEGRAM=true VITE_DEV_BOT_TOKEN=123456:DEV-TOKEN pnpm 
 
 1. Создайте бота в @BotFather, затем `/newapp` (или Bot Settings → Menu Button) с URL `https://<DOMAIN>`.
 2. На VPS: Docker, каталог `/opt/hyzmat` с `.env` по образцу [`.env.example`](.env.example) (`DOMAIN`, `BOT_TOKEN`, `POSTGRES_PASSWORD`), DNS домена → IP сервера.
-3. Бот (`/start` → приветствие с кнопкой Mini App) — Cloudflare Worker в [`apps/bot-worker`](apps/bot-worker): VPS в РФ и Telegram недоступны друг другу, поэтому webhook принимает Worker и отвечает прямо в теле ответа. Один раз, с машины с доступом к Telegram:
+3. Бот — Cloudflare Worker в [`apps/bot-worker`](apps/bot-worker): VPS в РФ и Telegram недоступны друг другу, поэтому webhook принимает Worker и пересылает апдейт на сервер (`/api/bot/update`, логика в `apps/api/src/modules/bot`); ответ сервера уходит в Telegram телом webhook-ответа. Команды: `/start`, `/help`, в группах и личке — `/pochta <город>`, `/perevod <город>`. На сервере нужны `BOT_API_KEY` и `BOT_USERNAME` в `.env`. Один раз, с машины с доступом к Telegram:
    ```sh
    cd apps/bot-worker
    npx wrangler@4 login
@@ -54,7 +54,7 @@ cd apps/web && VITE_MOCK_TELEGRAM=true VITE_DEV_BOT_TOKEN=123456:DEV-TOKEN pnpm 
    npx wrangler@4 deploy                      # выведет адрес https://hyzmat-bot.<account>.workers.dev
    curl "https://api.telegram.org/bot<BOT_TOKEN>/setWebhook" -d url=<адрес Worker> -d secret_token=<WEBHOOK_SECRET>
    ```
-   Текст приветствия — в `apps/bot-worker/src/index.js`; после правки снова `npx wrangler@4 deploy`.
+   Тексты бота — в `apps/api/src/modules/bot/bot.update.ts` (деплоятся вместе с API); Worker передеплаивать нужно только при правке `apps/bot-worker`.
    Оформление (описание, команды, кнопка меню): `BOT_TOKEN=... node setup.mjs` в `apps/bot-worker`.
    Связь Worker → сервер: `BOT_API_KEY` в `.env` сервера и `npx wrangler@4 secret put SERVER_API_KEY` с тем же значением; проверка — `curl https://hyzmat-bot.<account>.workers.dev/diag -H "x-diag-key: <WEBHOOK_SECRET>"`.
 4. В GitHub: secrets `VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY`; variable `BOT_USERNAME`; environment `production`.

@@ -22,7 +22,16 @@ const DESCRIPTION = [
 const SHORT_DESCRIPTION =
   'Посылки и переводы денег между городами: найдите попутчика или исполнителя.';
 
-const PRIVATE_COMMANDS = [{ command: 'start', description: 'Открыть приложение' }];
+const SEARCH_COMMANDS = [
+  { command: 'pochta', description: 'Заявки на почту: /pochta Балкан' },
+  { command: 'perevod', description: 'Заявки на перевод: /perevod Ашхабад' },
+];
+const PRIVATE_COMMANDS = [
+  { command: 'start', description: 'Открыть приложение' },
+  ...SEARCH_COMMANDS,
+  { command: 'help', description: 'Как пользоваться' },
+];
+const GROUP_COMMANDS = [...SEARCH_COMMANDS, { command: 'help', description: 'Как пользоваться' }];
 
 async function call(method, params) {
   const res = await fetch(`https://api.telegram.org/bot${token}/${method}`, {
@@ -40,6 +49,10 @@ await call('setMyShortDescription', { short_description: SHORT_DESCRIPTION });
 await call('setMyCommands', {
   commands: PRIVATE_COMMANDS,
   scope: { type: 'all_private_chats' },
+});
+await call('setMyCommands', {
+  commands: GROUP_COMMANDS,
+  scope: { type: 'all_group_chats' },
 });
 await call('setChatMenuButton', {
   menu_button: { type: 'web_app', text: 'Открыть', web_app: { url: webappUrl } },

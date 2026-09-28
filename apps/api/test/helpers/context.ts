@@ -5,6 +5,8 @@ import type { Clock } from '../../src/lib/clock';
 import { signInitData, type TgUser } from './initData';
 
 export const BOT_TOKEN = '123456:TEST-TOKEN';
+export const BOT_API_KEY = 'test-bot-api-key-'.padEnd(48, 'x');
+export const BOT_USERNAME = 'hyzmat_test_bot';
 
 let prisma: PrismaClient | undefined;
 
@@ -50,6 +52,7 @@ export async function createTestContext() {
     clock,
     botToken: BOT_TOKEN,
     initDataTtlSeconds: 86_400,
+    bot: { apiKey: BOT_API_KEY, botUsername: BOT_USERNAME, webappUrl: 'https://app.test' },
     logger: process.env.TEST_LOG ? { level: 'error' } : false,
   });
 

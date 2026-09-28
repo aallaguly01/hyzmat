@@ -10,6 +10,15 @@ const EnvSchema = z.object({
     (v) => (v === '' ? undefined : v),
     z.string().min(32, 'BOT_API_KEY: не короче 32 символов').optional(),
   ),
+  // Без них /api/bot/* не включается даже с BOT_API_KEY: нужны для ссылок t.me/<бот>?startapp=…
+  BOT_USERNAME: z.preprocess(
+    (v) => (v === '' ? undefined : v),
+    z
+      .string()
+      .regex(/^\w{5,32}$/, 'BOT_USERNAME: username бота без @')
+      .optional(),
+  ),
+  WEBAPP_URL: z.string().url().optional(),
   PORT: z.coerce.number().int().default(3000),
   HOST: z.string().default('0.0.0.0'),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),
@@ -24,4 +33,19 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     throw new Error(`Некорректные переменные окружения:\n${msg}`);
   }
   return parsed.data;
+}
+
+export interface BotSettings {
+  apiKey: string;
+  botUsername: string;
+  webappUrl: string;
+}
+
+/** Настройки API бота или причина, по которой он выключен (API при этом работает). */
+export function botConfig(c: Config): { bot?: BotSettings; disabled?: string } {
+  if (!c.BOT_API_KEY) return { disabled: 'BOT_API_KEY не задан' };
+  if (!c.BOT_USERNAME || !c.WEBAPP_URL) {
+    return { disabled: 'для бота нужны BOT_USERNAME и WEBAPP_URL' };
+  }
+  return { bot: { apiKey: c.BOT_API_KEY, botUsername: c.BOT_USERNAME, webappUrl: c.WEBAPP_URL } };
 }
