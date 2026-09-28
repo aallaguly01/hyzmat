@@ -45,12 +45,16 @@ cd apps/web && VITE_MOCK_TELEGRAM=true VITE_DEV_BOT_TOKEN=123456:DEV-TOKEN pnpm 
 ## Продакшен (VPS)
 
 1. Создайте бота в @BotFather, затем `/newapp` (или Bot Settings → Menu Button) с URL `https://<DOMAIN>`.
-2. На VPS: Docker, каталог `/opt/hyzmat` с `.env` по образцу [`.env.example`](.env.example) (`DOMAIN`, `BOT_TOKEN`, `BOT_WEBHOOK_SECRET`, `POSTGRES_PASSWORD`), DNS домена → IP сервера. `BOT_WEBHOOK_SECRET` — случайная строка (`openssl rand -hex 24`), на `/start` бот отвечает приветствием с кнопкой открытия Mini App.
-3. Один раз зарегистрируйте webhook — с любой машины, где доступен `api.telegram.org` (серверу исходящий доступ к Telegram не нужен: ответ на `/start` отдаётся в теле webhook-ответа):
+2. На VPS: Docker, каталог `/opt/hyzmat` с `.env` по образцу [`.env.example`](.env.example) (`DOMAIN`, `BOT_TOKEN`, `POSTGRES_PASSWORD`), DNS домена → IP сервера.
+3. Бот (`/start` → приветствие с кнопкой Mini App) — Cloudflare Worker в [`apps/bot-worker`](apps/bot-worker): VPS в РФ и Telegram недоступны друг другу, поэтому webhook принимает Worker и отвечает прямо в теле ответа. Один раз, с машины с доступом к Telegram:
    ```sh
-   curl "https://api.telegram.org/bot<BOT_TOKEN>/setWebhook" -d url=https://<DOMAIN>/api/bot/webhook -d secret_token=<BOT_WEBHOOK_SECRET> -d 'allowed_updates=["message"]'
+   cd apps/bot-worker
+   npx wrangler@4 login
+   npx wrangler@4 secret put WEBHOOK_SECRET   # случайная строка: openssl rand -hex 24
+   npx wrangler@4 deploy                      # выведет адрес https://hyzmat-bot.<account>.workers.dev
+   curl "https://api.telegram.org/bot<BOT_TOKEN>/setWebhook" -d url=<адрес Worker> -d secret_token=<WEBHOOK_SECRET>
    ```
-   При смене `BOT_WEBHOOK_SECRET` команду нужно повторить.
+   Текст приветствия — в `apps/bot-worker/src/index.js`; после правки снова `npx wrangler@4 deploy`.
 4. В GitHub: secrets `VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY`; variable `BOT_USERNAME`; environment `production`.
 5. Push в `main` → CI (lint, typecheck, тесты, e2e) → Deploy (образы в GHCR, `docker compose up -d` по SSH). Миграции применяются при старте API, TLS выпускает Caddy.
 

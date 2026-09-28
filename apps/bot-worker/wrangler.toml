@@ -1,0 +1,8 @@
+name = "hyzmat-bot"
+main = "src/index.js"
+compatibility_date = "2026-09-01"
+
+[vars]
+WEBAPP_URL = "https://aljak.me"
+
+# WEBHOOK_SECRET задаётся секретом: npx wrangler secret put WEBHOOK_SECRET

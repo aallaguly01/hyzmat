@@ -1,0 +1,10 @@
+{
+  "name": "@hyzmat/bot-worker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test",
+    "deploy": "npx wrangler@4 deploy"
+  }
+}

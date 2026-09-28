@@ -97,6 +97,8 @@ importers:
         specifier: ^3.0.0
         version: 3.2.7(@types/node@22.20.4)(jiti@2.6.1)(jsdom@25.0.1)(msw@2.15.0(@types/node@22.20.4)(typescript@5.9.3))(tsx@4.23.15)(yaml@2.9.1)
 
+  apps/bot-worker: {}
+
   apps/web:
     dependencies:
       '@hyzmat/shared':

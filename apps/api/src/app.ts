@@ -4,7 +4,6 @@ import { makeSchemas, MAX_CREATES_PER_HOUR } from '@hyzmat/shared';
 import Fastify, { type FastifyServerOptions } from 'fastify';
 import type { Clock } from './lib/clock';
 import { createRateLimiter } from './lib/rateLimiter';
-import { botRoutes, type BotOptions } from './modules/bot/bot.routes';
 import { listingsRoutes } from './modules/listings/listings.routes';
 import { createListingsRepo } from './modules/listings/listings.repo';
 import { createListingsService } from './modules/listings/listings.service';
@@ -18,8 +17,6 @@ export interface AppOptions {
   botToken: string;
   initDataTtlSeconds: number;
   corsOrigin?: string | string[];
-  /** Webhook бота; без него /start не обрабатывается. */
-  bot?: BotOptions;
   logger?: FastifyServerOptions['logger'];
 }
 
@@ -62,11 +59,6 @@ export function buildApp(opts: AppOptions) {
     },
     { prefix: '/api' },
   );
-
-  const bot = opts.bot;
-  if (bot) {
-    void app.register(async (scope) => botRoutes(scope, bot), { prefix: '/api/bot' });
-  }
 
   return app;
 }
