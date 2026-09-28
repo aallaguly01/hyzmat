@@ -99,11 +99,13 @@ export async function installMockTelegram(): Promise<void> {
     username: env.VITE_MOCK_USERNAME || undefined,
   };
   const initData = await signInitData(user, env.VITE_DEV_BOT_TOKEN ?? '123456:DEV-TOKEN');
+  // ?startapp=l-<id> — как ссылка t.me/<бот>?startapp=…
+  const startParam = new URLSearchParams(location.search).get('startapp') ?? undefined;
   const noop = () => {};
 
   const wa: TelegramWebApp = {
     initData,
-    initDataUnsafe: { user },
+    initDataUnsafe: { user, start_param: startParam },
     version: '8.0',
     colorScheme: 'light',
     themeParams: {},

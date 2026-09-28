@@ -33,7 +33,8 @@ export interface BackButtonApi {
 
 export interface TelegramWebApp {
   initData: string;
-  initDataUnsafe: { user?: TelegramWebAppUser };
+  /** start_param — из ссылки t.me/<бот>?startapp=<param> */
+  initDataUnsafe: { user?: TelegramWebAppUser; start_param?: string };
   version: string;
   colorScheme: 'light' | 'dark';
   themeParams: Record<string, string | undefined>;

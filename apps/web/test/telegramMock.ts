@@ -28,7 +28,9 @@ function createButton() {
   return btn;
 }
 
-export function createTelegramMock(opts: { user?: TelegramWebAppUser; initData?: string } = {}) {
+export function createTelegramMock(
+  opts: { user?: TelegramWebAppUser; initData?: string; startParam?: string } = {},
+) {
   const user = opts.user ?? { id: 1001, first_name: 'Алиса', username: 'alice' };
   const themeHandlers = new Set<() => void>();
   const confirmAnswers: boolean[] = [];
@@ -38,7 +40,7 @@ export function createTelegramMock(opts: { user?: TelegramWebAppUser; initData?:
 
   const wa = {
     initData: opts.initData ?? 'query_id=test&user=%7B%7D&auth_date=1&hash=abc',
-    initDataUnsafe: { user },
+    initDataUnsafe: { user, start_param: opts.startParam },
     version: '8.0',
     colorScheme: 'light' as const,
     themeParams: {},

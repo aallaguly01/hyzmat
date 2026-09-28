@@ -9,6 +9,7 @@ import card from '../../shared/ui/ListingCard.module.css';
 import { ListingCard } from '../../shared/ui/ListingCard';
 import { SearchInput } from '../../shared/ui/SearchInput';
 import { SegmentedControl } from '../../shared/ui/SegmentedControl';
+import { ShareButton } from '../../shared/ui/ShareButton';
 import { EmptyState, ErrorState, SkeletonList } from '../../shared/ui/States';
 import ui from '../../shared/ui/ui.module.css';
 import s from './FeedPage.module.css';
@@ -28,17 +29,20 @@ function FeedCard({ listing }: { listing: ListingDto }) {
       footer={
         <>
           <span className={card.author}>{listing.contact.label}</span>
-          {listing.isOwn ? (
-            <span className={card.own}>Ваша заявка</span>
-          ) : (
-            <button
-              type="button"
-              className={ui.button}
-              onClick={() => openContact(listing.contact)}
-            >
-              Написать
-            </button>
-          )}
+          <div className={card.actions}>
+            <ShareButton listing={listing} />
+            {listing.isOwn ? (
+              <span className={card.own}>Ваша заявка</span>
+            ) : (
+              <button
+                type="button"
+                className={ui.button}
+                onClick={() => openContact(listing.contact)}
+              >
+                Написать
+              </button>
+            )}
+          </div>
         </>
       }
     />

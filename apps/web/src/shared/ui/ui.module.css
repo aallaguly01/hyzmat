@@ -28,6 +28,12 @@
   color: var(--c-accent-soft);
 }
 
+/* Квадратная кнопка с иконкой */
+.icon {
+  width: 36px;
+  padding: 0;
+}
+
 .danger {
   background: var(--c-secondary-bg);
   color: var(--c-destructive);

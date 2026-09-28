@@ -1,4 +1,10 @@
-import type { Contact } from '@hyzmat/shared';
+import {
+  formatAmount,
+  formatDate,
+  listingStartParam,
+  type Contact,
+  type ListingDto,
+} from '@hyzmat/shared';
 import type { TelegramWebApp } from './types';
 
 export function getWebApp(): TelegramWebApp | undefined {
@@ -38,4 +44,27 @@ export function openContact(contact: Contact): void {
   } catch {
     void showAlert(`У автора нет @username. Найдите его в Telegram по имени: ${contact.label}`);
   }
+}
+
+/** Username бота без @; без него ссылки t.me/<бот>?startapp=… не построить. */
+export function botUsername(): string | undefined {
+  return import.meta.env.VITE_BOT_USERNAME || undefined;
+}
+
+export function listingLink(id: string): string | undefined {
+  const bot = botUsername();
+  return bot ? `https://t.me/${bot}?startapp=${listingStartParam(id)}` : undefined;
+}
+
+/** Нативный диалог «Поделиться» Telegram со ссылкой, открывающей заявку в Mini App. */
+export function shareListing(listing: ListingDto): void {
+  const url = listingLink(listing.id);
+  if (!url) return;
+  const route = `${listing.fromCity} → ${listing.toCity}`;
+  const text =
+    listing.type === 'MAIL'
+      ? `📦 Почта: ${route}, ${formatDate(listing.departureDate)}`
+      : `💸 Перевод: ${route}, ${formatAmount(listing.amount)}`;
+  const params = new URLSearchParams({ url, text });
+  webApp().openTelegramLink(`https://t.me/share/url?${params}`);
 }

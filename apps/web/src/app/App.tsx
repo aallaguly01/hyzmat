@@ -9,6 +9,7 @@ import { BottomTabs } from '../shared/ui/BottomTabs';
 import ui from '../shared/ui/ui.module.css';
 import { FeedFilterProvider } from './FeedFilter';
 import { createQueryClient } from './queryClient';
+import { useStartParam } from './useStartParam';
 
 const CreateListingPage = lazy(() =>
   import('../features/listing-form/ListingFormPage').then((m) => ({
@@ -17,6 +18,11 @@ const CreateListingPage = lazy(() =>
 );
 const EditListingPage = lazy(() =>
   import('../features/listing-form/ListingFormPage').then((m) => ({ default: m.EditListingPage })),
+);
+const ListingViewPage = lazy(() =>
+  import('../features/listing-view/ListingViewPage').then((m) => ({
+    default: m.ListingViewPage,
+  })),
 );
 
 function OpenInTelegram() {
@@ -66,6 +72,7 @@ export function AppProviders({
 }
 
 export function AppRoutes() {
+  useStartParam();
   return (
     <Suspense fallback={<div className={ui.spinner}>Загрузка…</div>}>
       <Routes>
@@ -74,6 +81,7 @@ export function AppRoutes() {
           <Route path="/my" element={<MyListingsPage />} />
         </Route>
         <Route path="/listings/new" element={<CreateListingPage />} />
+        <Route path="/listings/:id" element={<ListingViewPage />} />
         <Route path="/listings/:id/edit" element={<EditListingPage />} />
         <Route path="*" element={<Navigate to="/feed" replace />} />
       </Routes>
