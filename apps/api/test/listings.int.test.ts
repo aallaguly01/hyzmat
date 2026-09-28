@@ -130,6 +130,57 @@ describe('Создание заявки «Перевод»', () => {
   });
 });
 
+describe('Комментарий к заявке', () => {
+  it('Создание с комментарием', async () => {
+    const res = await post(USERS.alice, { ...MAIL, comment: '  WhatsApp +99365000000  ' });
+    expect(res.statusCode).toBe(201);
+    expect(res.json().comment).toBe('WhatsApp +99365000000');
+  });
+
+  it('Комментарий у «Перевода»', async () => {
+    const res = await post(USERS.alice, { ...TRANSFER, comment: 'Звоните после 18:00' });
+    expect(res.statusCode).toBe(201);
+    expect(res.json().comment).toBe('Звоните после 18:00');
+  });
+
+  it('Без комментария', async () => {
+    expect((await post(USERS.alice, MAIL)).json().comment).toBeNull();
+    expect((await post(USERS.alice, { ...TRANSFER, comment: '   ' })).json().comment).toBeNull();
+  });
+
+  it('Слишком длинный комментарий', async () => {
+    const res = await post(USERS.alice, { ...MAIL, comment: 'а'.repeat(301) });
+    expect(res.statusCode).toBe(400);
+    expect(res.json().error.code).toBe('VALIDATION_ERROR');
+    expect(res.json().error.details[0].path).toEqual(['comment']);
+  });
+
+  it('Изменение и очистка комментария', async () => {
+    for (const base of [MAIL, TRANSFER]) {
+      const created = (await post(USERS.alice, base)).json();
+      const set = await patch(USERS.alice, created.id, { comment: 'IMO +99365000000' });
+      expect(set.statusCode).toBe(200);
+      expect(set.json()).toMatchObject({
+        comment: 'IMO +99365000000',
+        fromCity: created.fromCity,
+        toCity: created.toCity,
+      });
+      const cleared = await patch(USERS.alice, created.id, { comment: null });
+      expect(cleared.statusCode).toBe(200);
+      expect(cleared.json().comment).toBeNull();
+    }
+  });
+
+  it('комментарий виден в ленте и в «Моих заявках»', async () => {
+    await post(USERS.alice, { ...MAIL, comment: 'Telegram не читаю, пишите в WhatsApp' });
+    const item = (await feed(USERS.bob, 'type=MAIL')).json().items[0];
+    expect(item.comment).toBe('Telegram не читаю, пишите в WhatsApp');
+    expect((await mine(USERS.alice)).json().items[0].comment).toBe(
+      'Telegram не читаю, пишите в WhatsApp',
+    );
+  });
+});
+
 describe('Лимиты на создание', () => {
   it('Превышен лимит активных заявок', async () => {
     for (let i = 0; i < 5; i++) {

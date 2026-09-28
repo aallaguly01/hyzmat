@@ -9,7 +9,18 @@ export const MAX_DAYS_AHEAD = 365;
 
 export const CITY_MIN = 2;
 export const CITY_MAX = 64;
+/** Подсказки для быстрого выбора в форме; свой город по-прежнему вводится вручную. */
+export const POPULAR_CITIES = [
+  'Балкан',
+  'Ашхабад',
+  'Мары',
+  'Лебап',
+  'Дашогуз',
+  'Казань',
+  'Москва',
+] as const;
 export const CONDITIONS_MAX = 200;
+export const COMMENT_MAX = 300;
 export const AMOUNT_MAX = 1_000_000;
 
 export const FEED_DEFAULT_LIMIT = 20;

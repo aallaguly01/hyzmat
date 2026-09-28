@@ -1,5 +1,6 @@
 import {
   addDays,
+  COMMENT_MAX,
   makeSchemas,
   MAX_DAYS_AHEAD,
   todayUtc,
@@ -17,40 +18,56 @@ import {
   useMainButton,
 } from '../../shared/telegram/hooks';
 import { getWebApp, haptic, showAlert, showConfirm } from '../../shared/telegram/webapp';
+import { CityChips } from '../../shared/ui/CityChips';
 import { EmptyState } from '../../shared/ui/States';
 import ui from '../../shared/ui/ui.module.css';
 import s from './ListingFormPage.module.css';
 
 const clock = { today: () => todayUtc() };
 
-const FIELDS: Record<ListingType, { name: string; label: string; kind?: 'date' | 'amount' }[]> = {
+type FieldKind = 'city' | 'date' | 'amount' | 'comment';
+
+const COMMENT_FIELD = { name: 'comment', label: 'Комментарий', kind: 'comment' } as const;
+
+const FIELDS: Record<ListingType, { name: string; label: string; kind?: FieldKind }[]> = {
   MAIL: [
-    { name: 'fromCity', label: 'Откуда' },
-    { name: 'toCity', label: 'Куда' },
+    { name: 'fromCity', label: 'Откуда', kind: 'city' },
+    { name: 'toCity', label: 'Куда', kind: 'city' },
     { name: 'departureDate', label: 'Дата вылета', kind: 'date' },
+    COMMENT_FIELD,
   ],
   TRANSFER: [
-    { name: 'fromCity', label: 'Город, где отдаю деньги' },
-    { name: 'toCity', label: 'Город, где получат деньги' },
+    { name: 'fromCity', label: 'Город, где отдаю деньги', kind: 'city' },
+    { name: 'toCity', label: 'Город, где получат деньги', kind: 'city' },
     { name: 'amount', label: 'Сумма, $', kind: 'amount' },
     { name: 'conditions', label: 'Условия/Комиссия' },
+    COMMENT_FIELD,
   ],
 };
 
 const EMPTY: Record<ListingType, Record<string, string>> = {
-  MAIL: { fromCity: '', toCity: '', departureDate: '' },
-  TRANSFER: { fromCity: '', toCity: '', amount: '', conditions: '' },
+  MAIL: { fromCity: '', toCity: '', departureDate: '', comment: '' },
+  TRANSFER: { fromCity: '', toCity: '', amount: '', conditions: '', comment: '' },
 };
 
 function toFormValues(l: MyListingDto): Record<string, string> {
+  const comment = l.comment ?? '';
   return l.type === 'MAIL'
-    ? { fromCity: l.fromCity, toCity: l.toCity, departureDate: l.departureDate }
+    ? { fromCity: l.fromCity, toCity: l.toCity, departureDate: l.departureDate, comment }
     : {
         fromCity: l.fromCity,
         toCity: l.toCity,
         amount: l.amount.replace(/\.00$/, ''),
         conditions: l.conditions ?? '',
+        comment,
       };
+}
+
+/** Значение изменённого поля для PATCH: пустой комментарий — явная очистка (`null`). */
+function patchValue(key: string, values: Record<string, string>, data: Record<string, unknown>) {
+  if (key === 'conditions') return values.conditions!.trim();
+  if (key === 'comment') return values.comment!.trim() || null;
+  return data[key];
 }
 
 function ContactHint() {
@@ -96,12 +113,7 @@ function ListingForm({ type, initial, onBack, submit }: FormProps) {
     if (inFlight.current || !form.isValid || !form.data) return;
     const data = form.data as Record<string, unknown>;
     const body: Record<string, unknown> = isEdit
-      ? Object.fromEntries(
-          form.changedKeys.map((k) => [
-            k,
-            k === 'conditions' ? form.values.conditions!.trim() : data[k],
-          ]),
-        )
+      ? Object.fromEntries(form.changedKeys.map((k) => [k, patchValue(k, form.values, data)]))
       : { type, ...data };
 
     inFlight.current = true;
@@ -149,20 +161,46 @@ function ListingForm({ type, initial, onBack, submit }: FormProps) {
         return (
           <div key={f.name} className={s.field}>
             <label htmlFor={`field-${f.name}`}>{f.label}</label>
-            <input
-              {...form.bind(f.name)}
-              type={f.kind === 'date' ? 'date' : 'text'}
-              inputMode={f.kind === 'amount' ? 'decimal' : undefined}
-              autoComplete="off"
-              maxLength={f.name === 'conditions' ? 200 : f.kind ? undefined : 64}
-              min={f.kind === 'date' ? today : undefined}
-              max={f.kind === 'date' ? addDays(today, MAX_DAYS_AHEAD) : undefined}
-              placeholder={f.name === 'conditions' ? 'Например: комиссия 2%' : undefined}
-            />
+            {f.kind === 'comment' ? (
+              <textarea
+                {...form.bind(f.name)}
+                rows={3}
+                maxLength={COMMENT_MAX}
+                autoComplete="off"
+                placeholder="Можете указать способ связи"
+              />
+            ) : (
+              <input
+                {...form.bind(f.name)}
+                type={f.kind === 'date' ? 'date' : 'text'}
+                inputMode={f.kind === 'amount' ? 'decimal' : undefined}
+                autoComplete="off"
+                maxLength={
+                  f.name === 'conditions' ? 200 : !f.kind || f.kind === 'city' ? 64 : undefined
+                }
+                min={f.kind === 'date' ? today : undefined}
+                max={f.kind === 'date' ? addDays(today, MAX_DAYS_AHEAD) : undefined}
+                placeholder={
+                  f.name === 'conditions'
+                    ? 'Например: комиссия 2%'
+                    : f.kind === 'city'
+                      ? 'Выберите или введите свой'
+                      : undefined
+                }
+              />
+            )}
             {error && (
               <span id={`field-${f.name}-error`} className={s.error}>
                 {error}
               </span>
+            )}
+            {f.kind === 'city' && (
+              <CityChips
+                label={f.label}
+                value={form.values[f.name] ?? ''}
+                disabledValue={form.values[f.name === 'fromCity' ? 'toCity' : 'fromCity']}
+                onPick={(city) => form.setValue(f.name, city)}
+              />
             )}
           </div>
         );

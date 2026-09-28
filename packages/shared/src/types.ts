@@ -18,6 +18,7 @@ interface ListingBase {
   id: string;
   fromCity: string;
   toCity: string;
+  comment: string | null;
   author: AuthorDto;
   contact: Contact;
   isOwn: boolean;

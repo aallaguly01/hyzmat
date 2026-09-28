@@ -1,4 +1,4 @@
-import { act, fireEvent, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import type { MyListingDto } from '@hyzmat/shared';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { mailListing, myMail, myTransfer, transferListing } from '../../../test/fixtures';
@@ -299,6 +299,143 @@ describe('listing-form-ui: Редактирование', () => {
     );
     renderApp(`/listings/${l.id}/edit`);
     expect(await screen.findByText('Заявка не найдена')).toBeInTheDocument();
+  });
+});
+
+describe('listing-form-ui: Поле «Комментарий»', () => {
+  const lastField = () => {
+    const fields = screen.getAllByRole('textbox');
+    return fields[fields.length - 1];
+  };
+
+  it('Поле в форме: Почта', async () => {
+    await openMailForm();
+    const comment = screen.getByLabelText('Комментарий');
+    expect(comment.tagName).toBe('TEXTAREA');
+    expect(comment).toHaveAttribute('placeholder', 'Можете указать способ связи');
+    expect(comment).toHaveAttribute('maxlength', '300');
+    expect(lastField()).toBe(comment);
+  });
+
+  it('Поле в форме: Перевод', async () => {
+    const { user } = renderApp('/listings/new');
+    await user.click(await screen.findByRole('button', { name: /Перевод/ }));
+    expect(lastField()).toBe(screen.getByLabelText('Комментарий'));
+  });
+
+  it('Публикация с комментарием', async () => {
+    server.use(http.post('/api/listings', () => HttpResponse.json(myMail(), { status: 201 })));
+    const { user } = await openMailForm();
+    await fillMail(user);
+    await user.type(screen.getByLabelText('Комментарий'), 'WhatsApp +99365000000');
+    await waitFor(() => expect(mb().isActive).toBe(true));
+    act(() => mb().click());
+    await waitFor(() => expect(writes()).toHaveLength(1));
+    expect(writes()[0]?.body).toMatchObject({ comment: 'WhatsApp +99365000000' });
+  });
+
+  it('Публикация без комментария', async () => {
+    server.use(http.post('/api/listings', () => HttpResponse.json(myMail(), { status: 201 })));
+    const { user } = await openMailForm();
+    await fillMail(user);
+    await waitFor(() => expect(mb().isActive).toBe(true));
+    act(() => mb().click());
+    await waitFor(() => expect(writes()).toHaveLength(1));
+    expect(writes()[0]?.body).not.toHaveProperty('comment');
+  });
+
+  it('Очистка при редактировании', async () => {
+    const l = myMail({ comment: 'IMO +99365000000' });
+    server.use(
+      http.get(`/api/listings/${l.id}`, () => HttpResponse.json(l)),
+      http.patch(`/api/listings/${l.id}`, () => HttpResponse.json({ ...l, comment: null })),
+    );
+    const { user } = renderApp(`/listings/${l.id}/edit`);
+    const comment = await screen.findByLabelText('Комментарий');
+    expect(comment).toHaveValue('IMO +99365000000');
+    await user.clear(comment);
+    await waitFor(() => expect(mb().isActive).toBe(true));
+    act(() => mb().click());
+    await waitFor(() => expect(writes()).toHaveLength(1));
+    expect(writes()[0]?.body).toEqual({ comment: null });
+  });
+});
+
+describe('listing-form-ui: Быстрый выбор города', () => {
+  const CITIES = ['Балкан', 'Ашхабад', 'Мары', 'Лебап', 'Дашогуз', 'Казань', 'Москва'];
+  const chips = (field: string) => screen.getByRole('group', { name: `Быстрый выбор: ${field}` });
+  const chip = (field: string, city: string) =>
+    within(chips(field)).getByRole('button', { name: city });
+
+  it('Чипсы в форме: Почта', async () => {
+    await openMailForm();
+    for (const field of ['Откуда', 'Куда']) {
+      const names = within(chips(field))
+        .getAllByRole('button')
+        .map((b) => b.textContent);
+      expect(names).toEqual(CITIES);
+    }
+  });
+
+  it('Чипсы в форме: Перевод', async () => {
+    const { user } = renderApp('/listings/new');
+    await user.click(await screen.findByRole('button', { name: /Перевод/ }));
+    expect(within(chips('Город, где отдаю деньги')).getAllByRole('button')).toHaveLength(7);
+    expect(within(chips('Город, где получат деньги')).getAllByRole('button')).toHaveLength(7);
+  });
+
+  it('Выбор из списка', async () => {
+    const { user } = await openMailForm();
+    await user.click(chip('Откуда', 'Мары'));
+    expect(screen.getByLabelText('Откуда')).toHaveValue('Мары');
+    expect(chip('Откуда', 'Мары')).toHaveAttribute('aria-pressed', 'true');
+    expect(chip('Откуда', 'Москва')).toHaveAttribute('aria-pressed', 'false');
+    expect(tg().HapticFeedback.selectionChanged).toHaveBeenCalled();
+  });
+
+  it('Свой город', async () => {
+    server.use(http.post('/api/listings', () => HttpResponse.json(myMail(), { status: 201 })));
+    const { user } = await openMailForm();
+    await user.type(screen.getByLabelText('Откуда'), 'Стамбул');
+    await user.click(chip('Куда', 'Москва'));
+    fireEvent.change(screen.getByLabelText('Дата вылета'), { target: { value: '2026-10-15' } });
+    for (const b of within(chips('Откуда')).getAllByRole('button')) {
+      expect(b).toHaveAttribute('aria-pressed', 'false');
+    }
+    await waitFor(() => expect(mb().isActive).toBe(true));
+    act(() => mb().click());
+    await waitFor(() => expect(writes()).toHaveLength(1));
+    expect(writes()[0]?.body).toMatchObject({ fromCity: 'Стамбул', toCity: 'Москва' });
+  });
+
+  it('Отметка без учёта регистра', async () => {
+    const { user } = await openMailForm();
+    await user.type(screen.getByLabelText('Откуда'), ' ашхабад ');
+    expect(chip('Откуда', 'Ашхабад')).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('Город соседнего поля', async () => {
+    const { user } = await openMailForm();
+    await user.click(chip('Откуда', 'Ашхабад'));
+    expect(chip('Куда', 'Ашхабад')).toBeDisabled();
+    expect(chip('Куда', 'Москва')).toBeEnabled();
+  });
+
+  it('Выбор города при редактировании', async () => {
+    const l = myMail({ fromCity: 'Ашхабад', toCity: 'Москва', departureDate: '2026-10-15' });
+    server.use(
+      http.get(`/api/listings/${l.id}`, () => HttpResponse.json(l)),
+      http.patch(`/api/listings/${l.id}`, () => HttpResponse.json({ ...l, toCity: 'Казань' })),
+    );
+    const { user } = renderApp(`/listings/${l.id}/edit`);
+    await screen.findByLabelText('Куда');
+    expect(chip('Куда', 'Москва')).toHaveAttribute('aria-pressed', 'true');
+    await user.click(chip('Куда', 'Казань'));
+    await waitFor(() => expect(mb().isActive).toBe(true));
+    act(() => mb().click());
+    await waitFor(() => expect(writes()).toHaveLength(1));
+    expect(writes()[0]?.method).toBe('PATCH');
+    expect(writes()[0]?.body).toEqual({ toCity: 'Казань' });
   });
 });
 

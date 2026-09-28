@@ -4,6 +4,7 @@ import {
   AMOUNT_MAX,
   CITY_MAX,
   CITY_MIN,
+  COMMENT_MAX,
   CONDITIONS_MAX,
   FEED_DEFAULT_LIMIT,
   FEED_MAX_LIMIT,
@@ -46,6 +47,7 @@ const Amount = z
   });
 
 const ConditionsText = z.string().trim().max(CONDITIONS_MAX, `Максимум ${CONDITIONS_MAX} символов`);
+const CommentText = z.string().trim().max(COMMENT_MAX, `Максимум ${COMMENT_MAX} символов`);
 
 function departureDate(clock: Clock) {
   return z
@@ -77,11 +79,15 @@ function differentCities(v: { fromCity?: string; toCity?: string }, ctx: z.Refin
 const emptyToUndefined = (v: string | undefined) => (v ? v : undefined);
 const emptyToNull = (v: string | null | undefined) => (v === undefined ? undefined : v || null);
 
+const comment = CommentText.optional().transform(emptyToUndefined);
+const commentPatch = CommentText.nullable().optional().transform(emptyToNull);
+
 export function makeSchemas(clock: Clock) {
   const MailFields = z.object({
     fromCity: City,
     toCity: City,
     departureDate: departureDate(clock),
+    comment,
   });
 
   const TransferFields = z.object({
@@ -89,6 +95,7 @@ export function makeSchemas(clock: Clock) {
     toCity: City,
     amount: Amount,
     conditions: ConditionsText.optional().transform(emptyToUndefined),
+    comment,
   });
 
   const CreateMailInput = MailFields.extend({ type: z.literal('MAIL') });
@@ -100,9 +107,10 @@ export function makeSchemas(clock: Clock) {
     })
     .superRefine(differentCities);
 
-  const UpdateMailInput = MailFields.partial();
+  const UpdateMailInput = MailFields.extend({ comment: commentPatch }).partial();
   const UpdateTransferInput = TransferFields.extend({
     conditions: ConditionsText.nullable().optional().transform(emptyToNull),
+    comment: commentPatch,
   }).partial();
 
   const FeedQuery = z.object({

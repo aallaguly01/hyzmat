@@ -43,7 +43,8 @@ export function useZodForm<S extends ZodTypeAny>(schema: S, initialValues: Value
     value: values[name] ?? '',
     'aria-invalid': errors[name] ? true : undefined,
     'aria-describedby': errors[name] ? `field-${name}-error` : undefined,
-    onChange: (e: ChangeEvent<HTMLInputElement>) => setField(name, e.target.value),
+    onChange: (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+      setField(name, e.target.value),
     onBlur: () => setTouched((t) => ({ ...t, [name]: true })),
   });
 
@@ -57,6 +58,11 @@ export function useZodForm<S extends ZodTypeAny>(schema: S, initialValues: Value
     data: (result.success ? result.data : undefined) as z.output<S> | undefined,
     dirty: changedKeys.length > 0,
     changedKeys,
+    /** Программная установка значения (не из input) — сразу считается touched. */
+    setValue: (name: string, value: string) => {
+      setField(name, value);
+      setTouched((t) => ({ ...t, [name]: true }));
+    },
     markSubmitted: () => setSubmitted(true),
     setServerErrors,
   };

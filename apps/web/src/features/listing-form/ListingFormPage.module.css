@@ -34,11 +34,27 @@
   scroll-margin: 96px;
 }
 
-.field input:focus {
+.field textarea {
+  width: 100%;
+  min-height: 72px;
+  padding: 10px 12px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  outline: none;
+  background: var(--c-section-bg);
+  color: var(--c-text);
+  font-size: 16px; /* iOS не зумит поле при фокусе */
+  resize: vertical;
+  scroll-margin: 96px;
+}
+
+.field input:focus,
+.field textarea:focus {
   border-color: var(--c-accent);
 }
 
-.field input[aria-invalid='true'] {
+.field input[aria-invalid='true'],
+.field textarea[aria-invalid='true'] {
   border-color: var(--c-destructive);
 }
 

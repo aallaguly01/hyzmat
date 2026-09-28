@@ -16,6 +16,7 @@ export function toListingDto(row: ListingWithAuthor, viewerId: string): ListingD
     id: row.id,
     fromCity: row.fromCity,
     toCity: row.toCity,
+    comment: row.comment,
     author,
     contact: buildContactLink(author),
     isOwn: author.id === viewerId,

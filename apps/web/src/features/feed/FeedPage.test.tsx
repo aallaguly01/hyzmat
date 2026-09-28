@@ -124,6 +124,22 @@ describe('feed-ui: Карточки', () => {
   });
 });
 
+describe('feed-ui: Комментарий в карточке', () => {
+  it('Карточка с комментарием', async () => {
+    mockFeed({ MAIL: [mailListing({ comment: 'WhatsApp +99365000000' })] });
+    renderApp('/feed');
+    const card = await screen.findByRole('article');
+    expect(within(card).getByTestId('listing-comment')).toHaveTextContent('WhatsApp +99365000000');
+  });
+
+  it('Без комментария', async () => {
+    mockFeed({ MAIL: [mailListing({ comment: null })] });
+    renderApp('/feed');
+    await screen.findByRole('article');
+    expect(screen.queryByTestId('listing-comment')).not.toBeInTheDocument();
+  });
+});
+
 describe('feed-ui: Кнопка «Написать»', () => {
   it('Автор с username', async () => {
     mockFeed({ MAIL: [mailListing()] });

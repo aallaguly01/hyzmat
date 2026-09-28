@@ -31,10 +31,11 @@ model Listing {
   authorId BigInt      @map("author_id")
   author   User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
 
-  fromCity     String @map("from_city") @db.VarChar(64)
-  toCity       String @map("to_city") @db.VarChar(64)
-  fromCityNorm String @map("from_city_norm") @db.VarChar(64)
-  toCityNorm   String @map("to_city_norm") @db.VarChar(64)
+  fromCity     String  @map("from_city") @db.VarChar(64)
+  toCity       String  @map("to_city") @db.VarChar(64)
+  fromCityNorm String  @map("from_city_norm") @db.VarChar(64)
+  toCityNorm   String  @map("to_city_norm") @db.VarChar(64)
+  comment      String? @db.VarChar(300)
 
   // MAIL
   departureDate DateTime? @map("departure_date") @db.Date

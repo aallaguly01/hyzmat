@@ -12,6 +12,7 @@ export function mailListing(over: Partial<MailListingDto> = {}): MailListingDto 
     type: 'MAIL',
     fromCity: 'Ашхабад',
     toCity: 'Москва',
+    comment: null,
     departureDate: '2026-10-15',
     author,
     contact: author.username
@@ -31,6 +32,7 @@ export function transferListing(over: Partial<TransferListingDto> = {}): Transfe
     type: 'TRANSFER',
     fromCity: 'Ашхабад',
     toCity: 'Стамбул',
+    comment: null,
     amount: '1500.00',
     currency: 'USD',
     conditions: 'Комиссия 2%',

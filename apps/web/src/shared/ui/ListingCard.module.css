@@ -52,6 +52,14 @@
   font-weight: 600;
 }
 
+.comment {
+  margin: 0;
+  color: var(--c-text);
+  font-size: 14px;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
 .hint {
   margin: 0;
   color: var(--c-hint);

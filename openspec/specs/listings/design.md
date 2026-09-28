@@ -45,6 +45,7 @@ model Listing {
   toCity        String      @map("to_city")        @db.VarChar(64)
   fromCityNorm  String      @map("from_city_norm") @db.VarChar(64)
   toCityNorm    String      @map("to_city_norm")   @db.VarChar(64)
+  comment       String?     @db.VarChar(300)          // оба типа, необязательный
 
   // MAIL
   departureDate DateTime?   @map("departure_date") @db.Date
@@ -96,6 +97,7 @@ export const CreateMailInput = z.object({
   type: z.literal("MAIL"),
   fromCity: City,
   toCity: City,
+  comment: z.string().trim().max(300).optional(), // пустая строка → нет
   departureDate: IsoDate,        // + refine: >= today && <= today+365 (в фабрике схемы с clock)
 });
 
@@ -105,6 +107,7 @@ export const CreateTransferInput = z.object({
   toCity: City,
   amount: Amount,
   conditions: z.string().trim().max(200).optional(),
+  comment: z.string().trim().max(300).optional(),
 });
 
 export const CreateListingInput = z

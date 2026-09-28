@@ -65,6 +65,7 @@ export function createListingsService({ repo, schemas, clock, createLimiter }: D
         toCity: input.toCity,
         fromCityNorm: normalizeCity(input.fromCity),
         toCityNorm: normalizeCity(input.toCity),
+        comment: input.comment ?? null,
         createdAt: now,
         updatedAt: now,
       };
@@ -97,13 +98,16 @@ export function createListingsService({ repo, schemas, clock, createLimiter }: D
           fromCity: existing.fromCity,
           toCity: existing.toCity,
           departureDate: toIsoDate(existing.departureDate!),
+          comment: existing.comment ?? undefined,
           ...patch,
+          ...(patch.comment === null ? { comment: undefined } : {}),
         });
         if (merged.type !== 'MAIL') throw new Error('unreachable');
         data = {
           fromCity: merged.fromCity,
           toCity: merged.toCity,
           departureDate: fromIsoDate(merged.departureDate),
+          comment: merged.comment ?? null,
         };
       } else {
         const patch = parseOrThrow(schemas.UpdateTransferInput, body);
@@ -113,8 +117,10 @@ export function createListingsService({ repo, schemas, clock, createLimiter }: D
           toCity: existing.toCity,
           amount: existing.amount!.toFixed(2),
           conditions: existing.conditions ?? undefined,
+          comment: existing.comment ?? undefined,
           ...patch,
           ...(patch.conditions === null ? { conditions: undefined } : {}),
+          ...(patch.comment === null ? { comment: undefined } : {}),
         });
         if (merged.type !== 'TRANSFER') throw new Error('unreachable');
         data = {
@@ -122,6 +128,7 @@ export function createListingsService({ repo, schemas, clock, createLimiter }: D
           toCity: merged.toCity,
           amount: merged.amount,
           conditions: merged.conditions ?? null,
+          comment: merged.comment ?? null,
         };
       }
 

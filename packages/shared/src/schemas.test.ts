@@ -157,6 +157,34 @@ describe('Update-схемы', () => {
   });
 });
 
+describe('Комментарий к заявке', () => {
+  it('Создание с комментарием: обрезает пробелы', () => {
+    const r = s.CreateListingInput.parse({ ...mail, comment: '  WhatsApp +99365000000  ' });
+    expect(r.comment).toBe('WhatsApp +99365000000');
+  });
+  it('Комментарий у «Перевода»', () => {
+    const r = s.CreateListingInput.parse({ ...transfer, comment: 'Звоните после 18:00' });
+    expect(r.comment).toBe('Звоните после 18:00');
+  });
+  it('Без комментария: пустой и пробельный — отсутствует', () => {
+    expect(s.CreateListingInput.parse(mail).comment).toBeUndefined();
+    expect(s.CreateListingInput.parse({ ...transfer, comment: '   ' }).comment).toBeUndefined();
+  });
+  it('Слишком длинный комментарий', () => {
+    const r = s.CreateListingInput.safeParse({ ...mail, comment: 'а'.repeat(301) });
+    expect(r.success).toBe(false);
+    expect(issues(r)[0]).toMatchObject({ path: ['comment'], message: 'Максимум 300 символов' });
+    expect(s.CreateListingInput.safeParse({ ...mail, comment: 'а'.repeat(300) }).success).toBe(
+      true,
+    );
+  });
+  it('Изменение и очистка комментария', () => {
+    expect(s.UpdateMailInput.parse({ comment: ' IMO ' })).toEqual({ comment: 'IMO' });
+    expect(s.UpdateMailInput.parse({ comment: null })).toEqual({ comment: null });
+    expect(s.UpdateTransferInput.parse({ comment: '' })).toEqual({ comment: null });
+  });
+});
+
 describe('FeedQuery', () => {
   it('limit по умолчанию 20', () => {
     expect(s.FeedQuery.parse({ type: 'MAIL' })).toEqual({ type: 'MAIL', limit: 20 });

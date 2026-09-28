@@ -46,6 +46,12 @@ export function ListingCard({ listing, showType, footer }: Props) {
         </div>
       )}
 
+      {listing.comment && (
+        <p className={s.comment} data-testid="listing-comment">
+          {listing.comment}
+        </p>
+      )}
+
       {expired && <p className={s.hint}>Не показывается в ленте. Измените дату, чтобы продлить</p>}
 
       <div className={s.footer}>{footer}</div>
