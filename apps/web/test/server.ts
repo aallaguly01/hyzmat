@@ -7,6 +7,7 @@ export const requests: { method: string; url: URL; body: unknown; headers: Heade
 export const server = setupServer(
   http.get('/api/listings', () => HttpResponse.json({ items: [], nextCursor: null })),
   http.get('/api/me/listings', () => HttpResponse.json({ items: [] })),
+  http.post('/api/listings/views', () => new HttpResponse(null, { status: 204 })),
 );
 
 server.events.on('request:start', async ({ request }) => {

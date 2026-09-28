@@ -26,6 +26,12 @@ export function createListingsRepo(prisma: PrismaClient) {
 
     delete: (id: string) => prisma.listing.delete({ where: { id } }),
 
+    // Сырой SQL, чтобы не трогать updated_at: показ — не редактирование заявки
+    recordViews: (ids: string[], viewerId: bigint) =>
+      prisma.$executeRaw`
+        UPDATE listings SET view_count = view_count + 1
+        WHERE id = ANY(${ids}::uuid[]) AND author_id <> ${viewerId}`,
+
     async feed(q: FeedQuery, today: string) {
       const and: Prisma.ListingWhereInput[] = [{ type: q.type }];
 

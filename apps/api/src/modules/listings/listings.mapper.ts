@@ -20,6 +20,7 @@ export function toListingDto(row: ListingWithAuthor, viewerId: string): ListingD
     author,
     contact: buildContactLink(author),
     isOwn: author.id === viewerId,
+    viewCount: row.viewCount,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };

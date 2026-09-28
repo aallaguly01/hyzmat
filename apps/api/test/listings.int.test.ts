@@ -387,6 +387,71 @@ describe('Мои заявки', () => {
   });
 });
 
+describe('Просмотры', () => {
+  const views = (user: TgUser, payload: object) =>
+    ctx.app.inject({
+      method: 'POST',
+      url: '/api/listings/views',
+      headers: ctx.auth(user),
+      payload,
+    });
+  const viewCount = async (id: string) =>
+    (await ctx.db.listing.findUniqueOrThrow({ where: { id } })).viewCount;
+
+  it('Новая заявка без просмотров', async () => {
+    const res = await post(USERS.alice, MAIL);
+    expect(res.json().viewCount).toBe(0);
+  });
+
+  it('Каждый показ другому пользователю увеличивает счётчик', async () => {
+    const a = await seedListing(ctx.db, USERS.alice, { type: 'TRANSFER' });
+    const b = await seedListing(ctx.db, USERS.alice, { type: 'TRANSFER' });
+    expect((await views(USERS.bob, { ids: [a.id, b.id] })).statusCode).toBe(204);
+    expect((await views(USERS.bob, { ids: [a.id] })).statusCode).toBe(204);
+    expect(await viewCount(a.id)).toBe(2);
+    expect(await viewCount(b.id)).toBe(1);
+
+    const [first] = (await feed(USERS.bob, 'type=TRANSFER')).json().items;
+    expect(first).toHaveProperty('viewCount');
+    const own = (await mine(USERS.alice)).json().items;
+    expect(own.find((i: { id: string }) => i.id === a.id).viewCount).toBe(2);
+  });
+
+  it('Показы автору не считаются', async () => {
+    const a = await seedListing(ctx.db, USERS.alice, { type: 'MAIL' });
+    await views(USERS.alice, { ids: [a.id] });
+    expect(await viewCount(a.id)).toBe(0);
+  });
+
+  it('Повтор id в одной пачке считается один раз', async () => {
+    const a = await seedListing(ctx.db, USERS.alice, { type: 'MAIL' });
+    await views(USERS.bob, { ids: [a.id, a.id] });
+    expect(await viewCount(a.id)).toBe(1);
+  });
+
+  it('Не меняет дату обновления заявки', async () => {
+    const a = await seedListing(ctx.db, USERS.alice, { type: 'MAIL' });
+    await views(USERS.bob, { ids: [a.id] });
+    const after = await ctx.db.listing.findUniqueOrThrow({ where: { id: a.id } });
+    expect(after.updatedAt).toEqual(a.updatedAt);
+  });
+
+  it('Несуществующие id игнорируются', async () => {
+    expect((await views(USERS.bob, { ids: [UNKNOWN_ID] })).statusCode).toBe(204);
+  });
+
+  it.each([
+    ['без ids', {}],
+    ['пустой список', { ids: [] }],
+    ['не uuid', { ids: ['nope'] }],
+    ['больше 50 id', { ids: Array(51).fill(UNKNOWN_ID) }],
+  ])('Некорректное тело: %s', async (_name, payload) => {
+    const res = await views(USERS.bob, payload);
+    expect(res.statusCode).toBe(400);
+    expect(res.json().error.code).toBe('VALIDATION_ERROR');
+  });
+});
+
 describe('Получение одной заявки', () => {
   it('возвращает заявку по id', async () => {
     const l = await seedListing(ctx.db, USERS.alice, { type: 'MAIL' });

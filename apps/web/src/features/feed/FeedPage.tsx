@@ -12,6 +12,7 @@ import { SegmentedControl } from '../../shared/ui/SegmentedControl';
 import { EmptyState, ErrorState, SkeletonList } from '../../shared/ui/States';
 import ui from '../../shared/ui/ui.module.css';
 import s from './FeedPage.module.css';
+import { useViewTracking } from './viewTracker';
 
 const TYPE_OPTIONS: { value: ListingType; label: string }[] = [
   { value: 'MAIL', label: 'Почта' },
@@ -19,8 +20,10 @@ const TYPE_OPTIONS: { value: ListingType; label: string }[] = [
 ];
 
 function FeedCard({ listing }: { listing: ListingDto }) {
+  const ref = useViewTracking<HTMLElement>(listing.id, !listing.isOwn);
   return (
     <ListingCard
+      cardRef={ref}
       listing={listing}
       footer={
         <>

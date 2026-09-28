@@ -1,6 +1,7 @@
-import { getDefaultNormalizer, screen, waitFor, within } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { act, getDefaultNormalizer, screen, waitFor, within } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
 import { mailListing, transferListing } from '../../../test/fixtures';
+import { intersectionObservers } from '../../../test/io';
 import { renderApp, scrollToEnd, tg } from '../../../test/render';
 import { apiError, http, HttpResponse, requests, server } from '../../../test/server';
 
@@ -137,6 +138,55 @@ describe('feed-ui: Комментарий в карточке', () => {
     renderApp('/feed');
     await screen.findByRole('article');
     expect(screen.queryByTestId('listing-comment')).not.toBeInTheDocument();
+  });
+});
+
+describe('feed-ui: Просмотры', () => {
+  const viewRequests = () =>
+    requests.filter((r) => r.method === 'POST' && r.url.pathname === '/api/listings/views');
+  /** Показать/скрыть карточку с данным городом отправления. */
+  const setVisible = (city: string, isIntersecting: boolean) => {
+    const article = screen.getByText(city).closest('article');
+    const observer = intersectionObservers.find((o) => o.el === article);
+    act(() => observer!.cb([{ isIntersecting }]));
+  };
+
+  it('Счётчик в стиле Telegram', async () => {
+    mockFeed({ MAIL: [mailListing({ viewCount: 1250 })] });
+    renderApp('/feed');
+    const views = await screen.findByLabelText('Просмотры: 1250');
+    expect(views).toHaveTextContent('1.2K');
+    expect(views.querySelector('svg')).toBeInTheDocument();
+  });
+
+  it('Показ засчитывается после секунды на экране, пачкой и один раз', async () => {
+    const a = mailListing({ fromCity: 'Мары' });
+    const b = mailListing({ fromCity: 'Дашогуз' });
+    const own = mailListing({ fromCity: 'Балканабат', isOwn: true });
+    mockFeed({ MAIL: [a, b, own] });
+    renderApp('/feed');
+    await screen.findByText('Мары');
+
+    vi.useFakeTimers();
+    try {
+      setVisible('Мары', true);
+      setVisible('Дашогуз', true);
+      act(() => vi.advanceTimersByTime(500));
+      setVisible('Дашогуз', false); // пролистали быстрее секунды — не считается
+      expect(intersectionObservers.some((o) => o.el?.textContent?.includes('Балканабат'))).toBe(
+        false,
+      );
+      act(() => vi.advanceTimersByTime(3_000));
+      // повторный показ той же карточки в этой сессии не считается
+      setVisible('Мары', false);
+      setVisible('Мары', true);
+      act(() => vi.advanceTimersByTime(3_000));
+    } finally {
+      vi.useRealTimers();
+    }
+
+    await waitFor(() => expect(viewRequests()).toHaveLength(1));
+    expect(viewRequests()[0]!.body).toEqual({ ids: [a.id] });
   });
 });
 

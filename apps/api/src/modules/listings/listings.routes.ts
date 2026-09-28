@@ -18,6 +18,11 @@ export function listingsRoutes(app: FastifyInstance, service: ListingsService) {
     return reply.code(201).send(dto);
   });
 
+  app.post('/listings/views', async (req, reply) => {
+    await service.recordViews(req.body, req.user);
+    return reply.code(204).send();
+  });
+
   app.patch('/listings/:id', (req) => {
     const { id } = parseOrThrow(IdParam, req.params);
     return service.update(id, req.body, req.user);

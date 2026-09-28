@@ -1,6 +1,7 @@
 import '@testing-library/jest-dom/vitest';
 import { cleanup } from '@testing-library/react';
 import { afterAll, afterEach, beforeAll, beforeEach, vi } from 'vitest';
+import { resetViewTracker } from '../src/features/feed/viewTracker';
 import { installIntersectionObserver, intersectionObservers } from './io';
 import { requests, server } from './server';
 import { installTelegram } from './telegramMock';
@@ -23,5 +24,6 @@ afterEach(() => {
   cleanup();
   server.resetHandlers();
   intersectionObservers.length = 0;
+  resetViewTracker();
 });
 afterAll(() => server.close());

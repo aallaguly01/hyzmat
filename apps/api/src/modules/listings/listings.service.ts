@@ -1,5 +1,11 @@
 import type { Prisma } from '@prisma/client';
-import { MAX_ACTIVE_LISTINGS, normalizeCity, type Schemas, type UserDto } from '@hyzmat/shared';
+import {
+  MAX_ACTIVE_LISTINGS,
+  normalizeCity,
+  RecordViewsBody,
+  type Schemas,
+  type UserDto,
+} from '@hyzmat/shared';
 import type { Clock } from '../../lib/clock';
 import { AppError, forbidden, notFound } from '../../lib/errors';
 import type { RateLimiter } from '../../lib/rateLimiter';
@@ -144,6 +150,12 @@ export function createListingsService({ repo, schemas, clock, createLimiter }: D
     async remove(id: string, user: UserDto) {
       await getOwned(id, user);
       await repo.delete(id);
+    },
+
+    /** Показы в ленте: +1 каждой заявке из пачки, кроме заявок самого зрителя. */
+    async recordViews(body: unknown, user: UserDto) {
+      const { ids } = parseOrThrow(RecordViewsBody, body);
+      await repo.recordViews([...new Set(ids)], BigInt(user.id));
     },
   };
 }

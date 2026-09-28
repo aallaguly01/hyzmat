@@ -144,3 +144,9 @@ export type UpdateTransferInput = z.output<Schemas['UpdateTransferInput']>;
 export type FeedQuery = z.output<Schemas['FeedQuery']>;
 
 export const IdParam = z.object({ id: z.string().uuid('Некорректный идентификатор') });
+
+/** Пачка показов карточек в ленте; клиент шлёт не больше MAX_VIEWS_BATCH id за раз. */
+export const MAX_VIEWS_BATCH = 50;
+export const RecordViewsBody = z.object({
+  ids: z.array(z.string().uuid('Некорректный идентификатор')).min(1).max(MAX_VIEWS_BATCH),
+});

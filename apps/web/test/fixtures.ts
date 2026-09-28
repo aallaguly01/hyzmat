@@ -19,6 +19,7 @@ export function mailListing(over: Partial<MailListingDto> = {}): MailListingDto 
       ? { url: `https://t.me/${author.username}`, label: `@${author.username}`, kind: 'username' }
       : { url: `tg://user?id=${author.id}`, label: author.firstName, kind: 'id' },
     isOwn: false,
+    viewCount: 0,
     createdAt: '2026-09-27T10:00:00.000Z',
     updatedAt: '2026-09-27T10:00:00.000Z',
     ...over,
@@ -41,6 +42,7 @@ export function transferListing(over: Partial<TransferListingDto> = {}): Transfe
       ? { url: `https://t.me/${author.username}`, label: `@${author.username}`, kind: 'username' }
       : { url: `tg://user?id=${author.id}`, label: author.firstName, kind: 'id' },
     isOwn: false,
+    viewCount: 0,
     createdAt: '2026-09-27T10:00:00.000Z',
     updatedAt: '2026-09-27T10:00:00.000Z',
     ...over,

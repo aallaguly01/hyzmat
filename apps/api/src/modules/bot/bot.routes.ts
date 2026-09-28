@@ -1,10 +1,8 @@
 import { timingSafeEqual } from 'node:crypto';
 import type { FastifyInstance } from 'fastify';
-import type { BotApi } from './bot.api';
 import { WELCOME_TEXT, welcomeKeyboard } from './bot.messages';
 
 export interface BotOptions {
-  api: BotApi;
   webappUrl: string;
   webhookSecret: string;
 }
@@ -22,7 +20,11 @@ function secretMatches(header: unknown, secret: string) {
   return a.length === b.length && timingSafeEqual(a, b);
 }
 
-/** Webhook Telegram: на /start отправляет приветствие с кнопкой Mini App. */
+/**
+ * Webhook Telegram: на /start отвечает приветствием с кнопкой Mini App.
+ * Ответ отдаётся прямо в теле webhook-ответа (`{ method: 'sendMessage', ... }`),
+ * поэтому серверу не нужен исходящий доступ к api.telegram.org.
+ */
 export function botRoutes(app: FastifyInstance, opts: BotOptions) {
   app.post('/webhook', async (req, reply) => {
     if (!secretMatches(req.headers['x-telegram-bot-api-secret-token'], opts.webhookSecret)) {
@@ -31,17 +33,13 @@ export function botRoutes(app: FastifyInstance, opts: BotOptions) {
 
     const msg = (req.body as Update | null)?.message;
     if (msg?.chat?.type === 'private' && msg.text && START.test(msg.text)) {
-      try {
-        await opts.api.sendMessage({
-          chat_id: msg.chat.id,
-          text: WELCOME_TEXT,
-          reply_markup: welcomeKeyboard(opts.webappUrl),
-        });
-      } catch (err) {
-        // 200 всё равно: иначе Telegram будет бесконечно ретраить апдейт
-        req.log.error({ err }, 'bot: sendMessage failed');
-      }
+      return reply.send({
+        method: 'sendMessage',
+        chat_id: msg.chat.id,
+        text: WELCOME_TEXT,
+        reply_markup: welcomeKeyboard(opts.webappUrl),
+      });
     }
-    return reply.code(200).send({ ok: true });
+    return reply.send({ ok: true });
   });
 }

@@ -1,5 +1,12 @@
-import { formatAmount, formatDate, type ListingDto, type MyListingDto } from '@hyzmat/shared';
-import type { ReactNode } from 'react';
+import {
+  formatAmount,
+  formatDate,
+  formatViews,
+  type ListingDto,
+  type MyListingDto,
+} from '@hyzmat/shared';
+import type { ReactNode, Ref } from 'react';
+import { EyeIcon } from './EyeIcon';
 import s from './ListingCard.module.css';
 
 const TYPE_LABEL = { MAIL: 'Почта', TRANSFER: 'Перевод' } as const;
@@ -9,12 +16,13 @@ interface Props {
   /** Бейдж типа — в «Моих заявках», где типы перемешаны. */
   showType?: boolean;
   footer: ReactNode;
+  cardRef?: Ref<HTMLElement>;
 }
 
-export function ListingCard({ listing, showType, footer }: Props) {
+export function ListingCard({ listing, showType, footer, cardRef }: Props) {
   const expired = 'isExpired' in listing && listing.isExpired;
   return (
-    <article className={s.card} data-expired={expired ? 'true' : undefined}>
+    <article ref={cardRef} className={s.card} data-expired={expired ? 'true' : undefined}>
       {(showType || expired) && (
         <div className={s.badges}>
           {showType && <span className={s.badge}>{TYPE_LABEL[listing.type]}</span>}
@@ -30,21 +38,27 @@ export function ListingCard({ listing, showType, footer }: Props) {
         <span>{listing.toCity}</span>
       </div>
 
-      {listing.type === 'MAIL' ? (
-        <div className={s.meta}>
-          <span aria-hidden>✈</span> <span>{formatDate(listing.departureDate)}</span>
-        </div>
-      ) : (
-        <div className={s.meta}>
-          <span className={s.amount}>{formatAmount(listing.amount)}</span>
-          {listing.conditions && (
-            <>
-              <span aria-hidden> · </span>
-              <span data-testid="listing-conditions">{listing.conditions}</span>
-            </>
-          )}
-        </div>
-      )}
+      <div className={s.metaRow}>
+        {listing.type === 'MAIL' ? (
+          <div className={s.meta}>
+            <span aria-hidden>✈</span> <span>{formatDate(listing.departureDate)}</span>
+          </div>
+        ) : (
+          <div className={s.meta}>
+            <span className={s.amount}>{formatAmount(listing.amount)}</span>
+            {listing.conditions && (
+              <>
+                <span aria-hidden> · </span>
+                <span data-testid="listing-conditions">{listing.conditions}</span>
+              </>
+            )}
+          </div>
+        )}
+        <span className={s.views} aria-label={`Просмотры: ${listing.viewCount}`}>
+          <EyeIcon />
+          {formatViews(listing.viewCount)}
+        </span>
+      </div>
 
       {listing.comment && (
         <p className={s.comment} data-testid="listing-comment">

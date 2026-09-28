@@ -36,6 +36,7 @@ model Listing {
   fromCityNorm String  @map("from_city_norm") @db.VarChar(64)
   toCityNorm   String  @map("to_city_norm") @db.VarChar(64)
   comment      String? @db.VarChar(300)
+  viewCount    Int     @default(0) @map("view_count") @db.Integer
 
   // MAIL
   departureDate DateTime? @map("departure_date") @db.Date

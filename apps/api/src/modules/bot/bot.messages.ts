@@ -1,4 +1,6 @@
-import type { WebAppButton } from './bot.api';
+export interface WebAppKeyboard {
+  inline_keyboard: { text: string; web_app: { url: string } }[][];
+}
 
 export const WELCOME_TEXT = [
   '👋 Добро пожаловать!',
@@ -7,6 +9,6 @@ export const WELCOME_TEXT = [
   'Нажимая «Понятно, продолжить», вы принимаете эти условия.',
 ].join('\n\n');
 
-export function welcomeKeyboard(webappUrl: string): { inline_keyboard: WebAppButton[][] } {
+export function welcomeKeyboard(webappUrl: string): WebAppKeyboard {
   return { inline_keyboard: [[{ text: 'Понятно, продолжить', web_app: { url: webappUrl } }]] };
 }

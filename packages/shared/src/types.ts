@@ -22,6 +22,7 @@ interface ListingBase {
   author: AuthorDto;
   contact: Contact;
   isOwn: boolean;
+  viewCount: number;
   createdAt: string;
   updatedAt: string;
 }

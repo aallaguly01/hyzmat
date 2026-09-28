@@ -45,9 +45,14 @@ cd apps/web && VITE_MOCK_TELEGRAM=true VITE_DEV_BOT_TOKEN=123456:DEV-TOKEN pnpm 
 ## Продакшен (VPS)
 
 1. Создайте бота в @BotFather, затем `/newapp` (или Bot Settings → Menu Button) с URL `https://<DOMAIN>`.
-2. На VPS: Docker, каталог `/opt/hyzmat` с `.env` по образцу [`.env.example`](.env.example) (`DOMAIN`, `BOT_TOKEN`, `BOT_WEBHOOK_SECRET`, `POSTGRES_PASSWORD`), DNS домена → IP сервера. `BOT_WEBHOOK_SECRET` — случайная строка (`openssl rand -hex 32`): при старте API сам ставит webhook `https://<DOMAIN>/api/bot/webhook`, и на `/start` бот отвечает приветствием с кнопкой открытия Mini App.
-3. В GitHub: secrets `VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY`; variable `BOT_USERNAME`; environment `production`.
-4. Push в `main` → CI (lint, typecheck, тесты, e2e) → Deploy (образы в GHCR, `docker compose up -d` по SSH). Миграции применяются при старте API, TLS выпускает Caddy.
+2. На VPS: Docker, каталог `/opt/hyzmat` с `.env` по образцу [`.env.example`](.env.example) (`DOMAIN`, `BOT_TOKEN`, `BOT_WEBHOOK_SECRET`, `POSTGRES_PASSWORD`), DNS домена → IP сервера. `BOT_WEBHOOK_SECRET` — случайная строка (`openssl rand -hex 24`), на `/start` бот отвечает приветствием с кнопкой открытия Mini App.
+3. Один раз зарегистрируйте webhook — с любой машины, где доступен `api.telegram.org` (серверу исходящий доступ к Telegram не нужен: ответ на `/start` отдаётся в теле webhook-ответа):
+   ```sh
+   curl "https://api.telegram.org/bot<BOT_TOKEN>/setWebhook" -d url=https://<DOMAIN>/api/bot/webhook -d secret_token=<BOT_WEBHOOK_SECRET> -d 'allowed_updates=["message"]'
+   ```
+   При смене `BOT_WEBHOOK_SECRET` команду нужно повторить.
+4. В GitHub: secrets `VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY`; variable `BOT_USERNAME`; environment `production`.
+5. Push в `main` → CI (lint, typecheck, тесты, e2e) → Deploy (образы в GHCR, `docker compose up -d` по SSH). Миграции применяются при старте API, TLS выпускает Caddy.
 
 ## Безопасность
 
