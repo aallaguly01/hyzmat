@@ -1,5 +1,5 @@
 import type { Contact } from './contact';
-import type { ErrorCode } from './constants';
+import type { ErrorCode, ListingType } from './constants';
 
 export interface UserDto {
   id: string;
@@ -62,4 +62,15 @@ export interface ApiErrorBody {
     message: string;
     details?: ApiErrorIssue[];
   };
+}
+
+export interface SubscriptionDto {
+  id: string;
+  type: ListingType;
+  city: string;
+  createdAt: string;
+}
+
+export interface SubscriptionsDto {
+  items: SubscriptionDto[];
 }

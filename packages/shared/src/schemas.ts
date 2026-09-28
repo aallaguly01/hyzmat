@@ -150,3 +150,10 @@ export const MAX_VIEWS_BATCH = 50;
 export const RecordViewsBody = z.object({
   ids: z.array(z.string().uuid('Некорректный идентификатор')).min(1).max(MAX_VIEWS_BATCH),
 });
+
+/** Подписка на новые заявки: тот же город, что в поиске ленты. */
+export const SubscriptionInput = z.object({
+  type: z.enum(LISTING_TYPES, { errorMap: () => ({ message: 'Укажите тип заявки' }) }),
+  city: City,
+});
+export type SubscriptionInput = z.output<typeof SubscriptionInput>;

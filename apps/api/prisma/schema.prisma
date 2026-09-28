@@ -14,13 +14,17 @@ enum ListingType {
 }
 
 model User {
-  id        BigInt    @id // Telegram user id
-  username  String?   @db.VarChar(32)
-  firstName String    @map("first_name") @db.VarChar(64)
-  lastName  String?   @map("last_name") @db.VarChar(64)
-  createdAt DateTime  @default(now()) @map("created_at")
-  updatedAt DateTime  @updatedAt @map("updated_at")
-  listings  Listing[]
+  id            BigInt         @id // Telegram user id
+  username      String?        @db.VarChar(32)
+  firstName     String         @map("first_name") @db.VarChar(64)
+  lastName      String?        @map("last_name") @db.VarChar(64)
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+  // Telegram ответил 403 (бот заблокирован / нет права писать) — уведомления не ставим
+  botBlockedAt  DateTime?      @map("bot_blocked_at")
+  listings      Listing[]
+  subscriptions Subscription[]
+  notifications Notification[]
 
   @@map("users")
 }
@@ -49,8 +53,43 @@ model Listing {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  // MAIL: напоминание «завтра выезд» уже поставлено в очередь
+  expiryNotifiedAt DateTime? @map("expiry_notified_at")
+
   @@index([type, createdAt(sort: Desc)])
   @@index([type, departureDate])
   @@index([authorId, createdAt(sort: Desc)])
   @@map("listings")
+}
+
+/// Подписка «тип + город» на новые заявки. Совпадение — как в поиске ленты:
+/// нормализованный город подписки входит в «откуда» или «куда».
+model Subscription {
+  id        String      @id @default(uuid()) @db.Uuid
+  userId    BigInt      @map("user_id")
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      ListingType
+  city      String      @db.VarChar(64)
+  cityNorm  String      @map("city_norm") @db.VarChar(64)
+  createdAt DateTime    @default(now()) @map("created_at")
+
+  @@unique([userId, type, cityNorm])
+  @@index([type])
+  @@map("subscriptions")
+}
+
+/// Очередь сообщений бота: сервер в РФ не ходит в Telegram, Worker забирает их по cron.
+model Notification {
+  id          BigInt    @id @default(autoincrement())
+  userId      BigInt    @map("user_id")
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  text        String
+  replyMarkup Json?     @map("reply_markup")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  claimedAt   DateTime? @map("claimed_at")
+  sentAt      DateTime? @map("sent_at")
+  attempts    Int       @default(0)
+
+  @@index([sentAt, id])
+  @@map("notifications")
 }

@@ -5,6 +5,8 @@ export const CURRENCY = 'USD';
 
 export const MAX_ACTIVE_LISTINGS = 5;
 export const MAX_CREATES_PER_HOUR = 5;
+/** Подписок «тип + город» на уведомления о новых заявках. */
+export const MAX_SUBSCRIPTIONS = 10;
 export const MAX_DAYS_AHEAD = 365;
 
 export const CITY_MIN = 2;
@@ -35,6 +37,7 @@ export const ERROR_CODES = [
   'FORBIDDEN',
   'NOT_FOUND',
   'LISTING_LIMIT_REACHED',
+  'SUBSCRIPTION_LIMIT_REACHED',
   'RATE_LIMITED',
   'INTERNAL_ERROR',
 ] as const;

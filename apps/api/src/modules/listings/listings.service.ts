@@ -10,7 +10,13 @@ import type { Clock } from '../../lib/clock';
 import { AppError, forbidden, notFound } from '../../lib/errors';
 import type { RateLimiter } from '../../lib/rateLimiter';
 import { parseOrThrow } from '../../lib/validate';
-import { fromIsoDate, toIsoDate, toListingDto, toMyListingDto } from './listings.mapper';
+import {
+  fromIsoDate,
+  toIsoDate,
+  toListingDto,
+  toMyListingDto,
+  type ListingWithAuthor,
+} from './listings.mapper';
 import type { ListingsRepo } from './listings.repo';
 
 interface Deps {
@@ -18,9 +24,11 @@ interface Deps {
   schemas: Schemas;
   clock: Clock;
   createLimiter: RateLimiter;
+  /** Уведомления подписчикам (есть, только если настроен бот). */
+  notifier?: { listingCreated(row: ListingWithAuthor): Promise<unknown> };
 }
 
-export function createListingsService({ repo, schemas, clock, createLimiter }: Deps) {
+export function createListingsService({ repo, schemas, clock, createLimiter, notifier }: Deps) {
   async function getOwned(id: string, user: UserDto) {
     const row = await repo.findById(id);
     if (!row) throw notFound();
@@ -86,6 +94,7 @@ export function createListingsService({ repo, schemas, clock, createLimiter }: D
             },
       );
       createLimiter.record(user.id);
+      await notifier?.listingCreated(row);
       return toListingDto(row, user.id);
     },
 
@@ -114,6 +123,10 @@ export function createListingsService({ repo, schemas, clock, createLimiter }: D
           toCity: merged.toCity,
           departureDate: fromIsoDate(merged.departureDate),
           comment: merged.comment ?? null,
+          // новая дата выезда — напомнить накануне и о ней
+          ...(merged.departureDate !== toIsoDate(existing.departureDate!)
+            ? { expiryNotifiedAt: null }
+            : {}),
         };
       } else {
         const patch = parseOrThrow(schemas.UpdateTransferInput, body);

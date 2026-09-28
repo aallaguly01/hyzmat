@@ -1,12 +1,13 @@
 import assert from 'node:assert/strict';
 import { afterEach, describe, it, mock } from 'node:test';
-import worker, { FALLBACK_TEXT } from './index.js';
+import worker, { deliver, FALLBACK_TEXT } from './index.js';
 
 const env = {
   WEBAPP_URL: 'https://example.com',
   SERVER_URL: 'https://api.test',
   WEBHOOK_SECRET: 'test-secret',
   SERVER_API_KEY: 'server-key',
+  BOT_TOKEN: '1:TOKEN',
 };
 
 const post = (body, secret = env.WEBHOOK_SECRET) =>
@@ -119,5 +120,93 @@ describe('diag', () => {
     const res = await diag();
     assert.equal(res.status, 502);
     assert.match((await res.json()).error, /timeout/);
+  });
+});
+
+describe('рассылка уведомлений (cron)', () => {
+  const item = (id, chat_id = '100') => ({
+    id,
+    chat_id,
+    text: `msg ${id}`,
+    parse_mode: 'HTML',
+    reply_markup: null,
+  });
+
+  /** fetch-заглушка: claim отдаёт `items`, Telegram отвечает по `tg(chat_id)`, ack запоминается. */
+  function mockNetwork(items, tg = () => new Response('{"ok":true}')) {
+    const calls = { telegram: [], ack: null };
+    mock.method(globalThis, 'fetch', async (url, init) => {
+      if (url.endsWith('/api/bot/outbox/claim')) {
+        assert.equal(init.headers['x-bot-key'], 'server-key');
+        return new Response(JSON.stringify({ items }));
+      }
+      if (url.endsWith('/api/bot/outbox/ack')) {
+        calls.ack = JSON.parse(init.body);
+        return new Response('{"ok":true}');
+      }
+      assert.equal(url, 'https://api.telegram.org/bot1:TOKEN/sendMessage');
+      const body = JSON.parse(init.body);
+      calls.telegram.push(body);
+      return tg(body.chat_id);
+    });
+    return calls;
+  }
+
+  it('пусто — в Telegram не ходим, ack не шлём', async () => {
+    const calls = mockNetwork([]);
+    assert.deepEqual(await deliver(env), { sent: 0, failed: 0 });
+    assert.equal(calls.telegram.length, 0);
+    assert.equal(calls.ack, null);
+  });
+
+  it('отправляет каждое сообщение без id и подтверждает', async () => {
+    const calls = mockNetwork([item('1', '100'), item('2', '200')]);
+    assert.deepEqual(await deliver(env), { sent: 2, failed: 0 });
+    assert.deepEqual(calls.telegram[0], {
+      chat_id: '100',
+      text: 'msg 1',
+      parse_mode: 'HTML',
+      reply_markup: null,
+      link_preview_options: { is_disabled: true },
+    });
+    assert.deepEqual(calls.ack, { sent: ['1', '2'], failed: [] });
+  });
+
+  it('403 и «chat not found» — навсегда, 429 и сеть — повторим', async () => {
+    const calls = mockNetwork(
+      [item('1', 'blocked'), item('2', 'never'), item('3', 'busy'), item('4', 'down')],
+      (chat) => {
+        if (chat === 'blocked') return new Response('{"ok":false}', { status: 403 });
+        if (chat === 'never') {
+          return new Response('{"ok":false,"description":"Bad Request: chat not found"}', {
+            status: 400,
+          });
+        }
+        if (chat === 'busy') return new Response('{"ok":false}', { status: 429 });
+        throw new Error('network');
+      },
+    );
+    assert.deepEqual(await deliver(env), { sent: 0, failed: 4 });
+    assert.deepEqual(calls.ack.failed, [
+      { id: '1', blocked: true },
+      { id: '2', blocked: true },
+      { id: '3', blocked: false },
+      { id: '4', blocked: false },
+    ]);
+  });
+
+  it('сервер не отдал очередь — ошибка, в Telegram не ходим', async () => {
+    const f = mock.method(globalThis, 'fetch', async () => new Response('down', { status: 502 }));
+    await assert.rejects(deliver(env), /claim: 502/);
+    assert.equal(f.mock.callCount(), 1);
+  });
+
+  it('scheduled передаёт рассылку в waitUntil', async () => {
+    mockNetwork([item('1')]);
+    mock.method(console, 'log', () => {});
+    const waited = [];
+    await worker.scheduled({}, env, { waitUntil: (p) => waited.push(p) });
+    assert.equal(waited.length, 1);
+    await waited[0];
   });
 });

@@ -5,7 +5,9 @@ import { LISTING_TYPES, type ListingType } from './constants';
  * Telegram допускает только [A-Za-z0-9_-] и до 64 символов, поэтому город кодируется в base64url.
  */
 export type StartParam =
-  { kind: 'listing'; id: string } | { kind: 'feed'; type: ListingType; city?: string };
+  | { kind: 'listing'; id: string }
+  | { kind: 'feed'; type: ListingType; city?: string }
+  | { kind: 'my' };
 
 const MAX_LEN = 64;
 const B64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
@@ -48,6 +50,9 @@ function fromBase64Url(s: string): string | null {
   }
 }
 
+/** «Мои заявки» — из напоминания об истечении заявки. */
+export const MY_LISTINGS_START_PARAM = 'my';
+
 export function listingStartParam(id: string): string {
   return `l-${id}`;
 }
@@ -62,6 +67,7 @@ export function feedStartParam(type: ListingType, city?: string): string {
 
 export function parseStartParam(param: string | undefined | null): StartParam | null {
   if (!param || param.length > MAX_LEN) return null;
+  if (param === MY_LISTINGS_START_PARAM) return { kind: 'my' };
   if (param.startsWith('l-')) {
     const id = param.slice(2);
     return UUID.test(id) ? { kind: 'listing', id } : null;

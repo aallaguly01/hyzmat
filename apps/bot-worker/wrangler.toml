@@ -6,4 +6,8 @@ compatibility_date = "2026-09-01"
 WEBAPP_URL = "https://aljak.me"
 SERVER_URL = "https://aljak.me"
 
-# секреты: npx wrangler@4 secret put WEBHOOK_SECRET | SERVER_API_KEY
+# секреты: npx wrangler@4 secret put WEBHOOK_SECRET | SERVER_API_KEY | BOT_TOKEN
+
+# рассылка уведомлений из очереди на сервере
+[triggers]
+crons = ["* * * * *"]

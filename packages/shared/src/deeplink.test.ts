@@ -12,6 +12,10 @@ describe('deeplink', () => {
     expect(parseStartParam(p)).toEqual({ kind: 'listing', id: ID });
   });
 
+  it('мои заявки', () => {
+    expect(parseStartParam('my')).toEqual({ kind: 'my' });
+  });
+
   it('лента без города', () => {
     expect(feedStartParam('MAIL')).toBe('f-MAIL');
     expect(parseStartParam('f-TRANSFER')).toEqual({ kind: 'feed', type: 'TRANSFER' });

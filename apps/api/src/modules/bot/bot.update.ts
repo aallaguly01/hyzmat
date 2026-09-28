@@ -1,12 +1,18 @@
 import {
   feedStartParam,
-  formatAmount,
-  formatDate,
   listingStartParam,
   resolveCityAlias,
   type ListingDto,
   type ListingType,
 } from '@hyzmat/shared';
+import {
+  appLink,
+  escapeHtml,
+  listingDetail,
+  routeHtml,
+  type InlineKeyboard,
+  type Button,
+} from './bot.format';
 
 /** Минимум полей Telegram Update, которые нужны боту. */
 export interface TgUpdate {
@@ -17,8 +23,6 @@ export interface TgUpdate {
   };
 }
 
-type Button = { text: string; url: string } | { text: string; web_app: { url: string } };
-
 /** Ответ в теле webhook: Telegram выполнит этот метод сам. */
 export interface SendMessageReply {
   method: 'sendMessage';
@@ -27,7 +31,7 @@ export interface SendMessageReply {
   parse_mode?: 'HTML';
   link_preview_options?: { is_disabled: boolean };
   reply_parameters?: { message_id: number; allow_sending_without_reply: boolean };
-  reply_markup?: { inline_keyboard: Button[][] };
+  reply_markup?: InlineKeyboard;
 }
 
 export interface BotDeps {
@@ -66,9 +70,6 @@ const SEARCH_COMMANDS: Record<string, { type: ListingType; title: string }> = {
 
 const COMMAND = /^\/([a-z0-9_]+)(?:@([a-z0-9_]+))?(?:\s+([\s\S]*))?$/i;
 
-const escapeHtml = (s: string) =>
-  s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-
 function parseCommand(text: string, botUsername: string) {
   const m = COMMAND.exec(text.trim());
   if (!m) return null;
@@ -78,15 +79,11 @@ function parseCommand(text: string, botUsername: string) {
   return { name: name!.toLowerCase(), args: args?.trim() ?? '' };
 }
 
-function listingLine(l: ListingDto, link: string) {
-  const route = `<a href="${link}">${escapeHtml(`${l.fromCity} → ${l.toCity}`)}</a>`;
-  const detail = l.type === 'MAIL' ? formatDate(l.departureDate) : formatAmount(l.amount);
-  return `${route} · ${detail}`;
-}
+const listingLine = (l: ListingDto, link: string) =>
+  `<a href="${link}">${routeHtml(l)}</a> · ${listingDetail(l)}`;
 
 export function createBotHandler(deps: BotDeps) {
-  const appLink = (param?: string) =>
-    `https://t.me/${deps.botUsername}?startapp${param ? `=${param}` : ''}`;
+  const link = (param?: string) => appLink(deps.botUsername, param);
 
   const reply = (
     msg: NonNullable<TgUpdate['message']>,
@@ -114,7 +111,7 @@ export function createBotHandler(deps: BotDeps) {
   ): Button =>
     msg.chat.type === 'private' && !param
       ? { text, web_app: { url: deps.webappUrl } }
-      : { text, url: appLink(param) };
+      : { text, url: link(param) };
 
   async function search(msg: NonNullable<TgUpdate['message']>, command: string, args: string) {
     const { type, title } = SEARCH_COMMANDS[command]!;
@@ -130,9 +127,7 @@ export function createBotHandler(deps: BotDeps) {
     if (items.length === 0) {
       return reply(msg, `${title} · ${escapeHtml(city)}\n\nЗаявок пока нет.`, [[feedButton]], true);
     }
-    const lines = items.map(
-      (l, i) => `${i + 1}. ${listingLine(l, appLink(listingStartParam(l.id)))}`,
-    );
+    const lines = items.map((l, i) => `${i + 1}. ${listingLine(l, link(listingStartParam(l.id)))}`);
     const more = hasMore ? '\n\nЕсть ещё — смотрите в приложении.' : '';
     return reply(
       msg,
